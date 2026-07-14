@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+
+{% block title %}Kontak | {{ profile.name if profile else 'Portofolio' }}{% endblock %}
+
+{% block content %}
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+    <div class="container text-center">
+        <h1 class="page-header-title">Hubungi <span class="text-accent">Saya</span></h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb justify-content-center">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Beranda</a></li>
+                <li class="breadcrumb-item active">Kontak</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<!-- CONTACT SECTION -->
+<section class="py-5">
+    <div class="container">
+        <div class="row g-5 justify-content-center">
+
+            <!-- Info Kontak -->
+            <div class="col-lg-4" data-aos="fade-right">
+                <span class="section-badge">Get In Touch</span>
+                <h2 class="section-title mt-2 mb-4">Mari Terhubung!</h2>
+                <p class="text-muted mb-4">
+                    Saya selalu terbuka untuk diskusi, kolaborasi proyek, atau sekadar menyapa. Jangan ragu untuk mengirimkan pesan!
+                </p>
+
+                <!-- Kontak Cards -->
+                <div class="d-flex flex-column gap-3">
+                    {% if profile and profile.email %}
+                    <div class="contact-info-card">
+                        <div class="contact-info-icon">
+                            <i class="bi bi-envelope-fill"></i>
+                        </div>
+                        <div>
+                            <small class="text-muted d-block">Email</small>
+                            <a href="mailto:{{ profile.email }}" class="text-decoration-none fw-medium">
+                                {{ profile.email }}
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% if profile and profile.github %}
+                    <div class="contact-info-card">
+                        <div class="contact-info-icon">
+                            <i class="bi bi-github"></i>
+                        </div>
+                        <div>
+                            <small class="text-muted d-block">GitHub</small>
+                            <a href="{{ profile.github }}" target="_blank" class="text-decoration-none fw-medium">
+                                {{ profile.github | replace('https://github.com/', '') }}
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% if profile and profile.linkedin %}
+                    <div class="contact-info-card">
+                        <div class="contact-info-icon">
+                            <i class="bi bi-linkedin"></i>
+                        </div>
+                        <div>
+                            <small class="text-muted d-block">LinkedIn</small>
+                            <a href="{{ profile.linkedin }}" target="_blank" class="text-decoration-none fw-medium">
+                                LinkedIn Profile
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Form Kontak -->
+            <div class="col-lg-7" data-aos="fade-left">
+                <div class="contact-form-card">
+                    <h4 class="fw-bold mb-4">Kirim Pesan</h4>
+                    <form action="{{ url_for('contact') }}" method="POST" id="contactForm" novalidate>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="name" class="form-label fw-medium">
+                                    Nama Lengkap <span class="text-danger">*</span>
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-transparent border-end-0">
+                                        <i class="bi bi-person text-muted"></i>
+                                    </span>
+                                    <input type="text" class="form-control border-start-0 ps-0"
+                                           id="name" name="name" placeholder="Nama Anda"
+                                           required minlength="2">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="email" class="form-label fw-medium">
+                                    Email <span class="text-danger">*</span>
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-transparent border-end-0">
+                                        <i class="bi bi-envelope text-muted"></i>
+                                    </span>
+                                    <input type="email" class="form-control border-start-0 ps-0"
+                                           id="email" name="email" placeholder="email@contoh.com"
+                                           required>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <label for="message" class="form-label fw-medium">
+                                    Pesan <span class="text-danger">*</span>
+                                </label>
+                                <textarea class="form-control" id="message" name="message"
+                                          rows="6" placeholder="Tulis pesan Anda di sini..."
+                                          required minlength="10"></textarea>
+                                <div class="form-text text-end">
+                                    <span id="charCount">0</span> karakter
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary btn-lg w-100" id="submitBtn">
+                                    <i class="bi bi-send me-2"></i>Kirim Pesan
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Hitung karakter pesan
+document.getElementById('message').addEventListener('input', function() {
+    document.getElementById('charCount').textContent = this.value.length;
+});
+</script>
+{% endblock %}

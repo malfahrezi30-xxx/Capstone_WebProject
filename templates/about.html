@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+
+{% block title %}About | {{ profile.name if profile else 'Portofolio' }}{% endblock %}
+
+{% block content %}
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+    <div class="container text-center">
+        <h1 class="page-header-title">About <span class="text-accent">Me</span></h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb justify-content-center">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Beranda</a></li>
+                <li class="breadcrumb-item active">About</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<!-- ABOUT SECTION -->
+<section class="py-5">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <!-- Foto Profil -->
+            <div class="col-lg-4 text-center" data-aos="fade-right">
+                <div class="about-img-wrapper mx-auto">
+                    {% if profile and profile.photo and profile.photo != 'default_profile.jpg' %}
+                        <img src="{{ url_for('static', filename='uploads/' + profile.photo) }}"
+                             alt="{{ profile.name }}" class="about-img">
+                    {% else %}
+                        <div class="about-img-placeholder">
+                            <i class="bi bi-person-fill"></i>
+                        </div>
+                    {% endif %}
+                </div>
+                <!-- Info Cards -->
+                <div class="row g-2 mt-4">
+                    {% if profile and profile.email %}
+                    <div class="col-12">
+                        <div class="info-card">
+                            <i class="bi bi-envelope-fill text-accent me-2"></i>
+                            <small>{{ profile.email }}</small>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% if profile and profile.github %}
+                    <div class="col-12">
+                        <div class="info-card">
+                            <i class="bi bi-github text-accent me-2"></i>
+                            <small>{{ profile.github | replace('https://github.com/', '') }}</small>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                <!-- Social Buttons -->
+                <div class="d-flex justify-content-center gap-2 mt-3">
+                    {% if profile and profile.github %}
+                    <a href="{{ profile.github }}" target="_blank" class="btn btn-dark btn-sm">
+                        <i class="bi bi-github me-1"></i>GitHub
+                    </a>
+                    {% endif %}
+                    {% if profile and profile.linkedin %}
+                    <a href="{{ profile.linkedin }}" target="_blank" class="btn btn-primary btn-sm">
+                        <i class="bi bi-linkedin me-1"></i>LinkedIn
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Deskripsi -->
+            <div class="col-lg-8" data-aos="fade-left">
+                <span class="section-badge">Tentang Saya</span>
+                <h2 class="section-title mt-2 mb-4">
+                    {{ profile.name if profile else 'Nama Anda' }}
+                    <br><span class="text-accent fs-4">{{ profile.headline if profile else 'Developer' }}</span>
+                </h2>
+                <p class="text-muted lh-lg mb-4">
+                    {{ profile.about_detail if profile else 'Deskripsi lengkap tentang diri Anda.' }}
+                </p>
+                {% if profile and profile.education %}
+                <div class="education-card mb-4">
+                    <h6 class="fw-bold mb-2"><i class="bi bi-mortarboard-fill text-accent me-2"></i>Pendidikan</h6>
+                    <p class="text-muted mb-0">{{ profile.education }}</p>
+                </div>
+                {% endif %}
+                <a href="{{ url_for('contact') }}" class="btn btn-primary me-2">
+                    <i class="bi bi-send me-2"></i>Hubungi Saya
+                </a>
+                <a href="{{ url_for('portfolio') }}" class="btn btn-outline-primary">
+                    <i class="bi bi-grid me-2"></i>Lihat Portofolio
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- SKILLS SECTION -->
+{% if skills_by_category %}
+<section class="py-5 bg-section-alt">
+    <div class="container">
+        <div class="text-center mb-5" data-aos="fade-up">
+            <span class="section-badge">Keahlian</span>
+            <h2 class="section-title mt-2">Tech Stack & Skills</h2>
+        </div>
+        {% for category, skills in skills_by_category.items() %}
+        <div class="mb-5" data-aos="fade-up">
+            <h5 class="skill-category-title mb-4">
+                <i class="bi bi-{{ 'code-slash' if category == 'Technical' else 'star' }} me-2 text-accent"></i>
+                {{ category }}
+            </h5>
+            <div class="row g-3">
+                {% for skill in skills %}
+                <div class="col-sm-6 col-md-4 col-lg-3">
+                    <div class="skill-item-card">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="skill-name fw-medium">{{ skill.name }}</span>
+                            <span class="skill-percent text-accent">{{ skill.level }}%</span>
+                        </div>
+                        <div class="skill-bar">
+                            <div class="skill-bar-fill" style="width: {{ skill.level }}%"
+                                 data-width="{{ skill.level }}"></div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% block title %}Portofolio | {{ profile.name if profile else 'Portofolio' }}{% endblock %}
+
+{% block content %}
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+    <div class="container text-center">
+        <h1 class="page-header-title">Portofolio <span class="text-accent">Saya</span></h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb justify-content-center">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Beranda</a></li>
+                <li class="breadcrumb-item active">Portofolio</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<!-- PROJECTS SECTION -->
+<section class="py-5">
+    <div class="container">
+
+        {% if projects %}
+        <!-- Stats Bar -->
+        <div class="text-center mb-5" data-aos="fade-up">
+            <p class="text-muted">Menampilkan <strong class="text-accent">{{ projects|length }}</strong> proyek</p>
+        </div>
+
+        <div class="row g-4">
+            {% for project in projects %}
+            <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 80 }}">
+                <div class="project-card h-100">
+                    <!-- Thumbnail -->
+                    <div class="project-card-img-wrapper">
+                        {% if project.image_file and project.image_file != 'default.jpg' %}
+                            <img src="{{ url_for('static', filename='uploads/' + project.image_file) }}"
+                                 alt="{{ project.title }}" class="project-card-img">
+                        {% else %}
+                            <div class="project-card-img-placeholder">
+                                <i class="bi bi-code-slash"></i>
+                            </div>
+                        {% endif %}
+                        <div class="project-card-overlay">
+                            <a href="{{ url_for('project_detail', project_id=project.id) }}"
+                               class="btn btn-light btn-sm me-2">
+                                <i class="bi bi-eye me-1"></i>Detail
+                            </a>
+                            {% if project.github_link %}
+                            <a href="{{ project.github_link }}" target="_blank" class="btn btn-dark btn-sm">
+                                <i class="bi bi-github"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <!-- Body -->
+                    <div class="project-card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="project-card-title mb-0">{{ project.title }}</h5>
+                            {% if project.live_link %}
+                            <a href="{{ project.live_link }}" target="_blank"
+                               class="text-success ms-2" title="Live Demo">
+                                <i class="bi bi-circle-fill" style="font-size:8px;"></i>
+                                <small>Live</small>
+                            </a>
+                            {% endif %}
+                        </div>
+                        <p class="project-card-desc text-muted small">
+                            {{ project.description[:120] }}{% if project.description|length > 120 %}...{% endif %}
+                        </p>
+                        <!-- Teknologi -->
+                        <div class="project-card-tech mb-3">
+                            {% for tech in project.get_technologies_list()[:5] %}
+                                <span class="tech-badge">{{ tech }}</span>
+                            {% endfor %}
+                            {% if project.get_technologies_list()|length > 5 %}
+                                <span class="tech-badge tech-badge-more">+{{ project.get_technologies_list()|length - 5 }}</span>
+                            {% endif %}
+                        </div>
+                        <!-- Actions -->
+                        <div class="d-flex gap-2 mt-auto">
+                            <a href="{{ url_for('project_detail', project_id=project.id) }}"
+                               class="btn btn-primary btn-sm flex-grow-1">
+                                <i class="bi bi-arrow-right me-1"></i>Lihat Detail
+                            </a>
+                            {% if project.github_link %}
+                            <a href="{{ project.github_link }}" target="_blank"
+                               class="btn btn-outline-secondary btn-sm" title="Source Code">
+                                <i class="bi bi-github"></i>
+                            </a>
+                            {% endif %}
+                            {% if project.live_link %}
+                            <a href="{{ project.live_link }}" target="_blank"
+                               class="btn btn-outline-success btn-sm" title="Live Demo">
+                                <i class="bi bi-box-arrow-up-right"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% else %}
+        <!-- Empty State -->
+        <div class="empty-state text-center py-5">
+            <div class="empty-state-icon mb-4">
+                <i class="bi bi-inbox"></i>
+            </div>
+            <h4 class="text-muted">Belum Ada Proyek</h4>
+            <p class="text-muted">Proyek portofolio belum ditambahkan.</p>
+            {% if session.get('logged_in') %}
+            <a href="{{ url_for('add_project') }}" class="btn btn-primary">
+                <i class="bi bi-plus-lg me-1"></i>Tambah Proyek Pertama
+            </a>
+            {% else %}
+            <a href="{{ url_for('login') }}" class="btn btn-outline-primary">Login untuk Tambah Proyek</a>
+            {% endif %}
+        </div>
+        {% endif %}
+
+    </div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="{% block meta_description %}Portofolio Web Dinamis - {{ profile.name if profile else 'Developer' }}{% endblock %}">
+    <title>{% block title %}{{ profile.name if profile else 'Portofolio' }}{% endblock %} | Portfolio</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg navbar-dark fixed-top" id="mainNavbar">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="{{ url_for('index') }}">
+            <span class="brand-bracket">&lt;</span>
+            {{ profile.name.split()[0] if profile else 'Dev' }}
+            <span class="brand-bracket">/&gt;</span>
+        </a>
+        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto gap-1">
+                <li class="nav-item">
+                    <a class="nav-link {{ 'active' if request.endpoint == 'index' }}" href="{{ url_for('index') }}">
+                        <i class="bi bi-house-door me-1"></i>Beranda
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ 'active' if request.endpoint == 'about' }}" href="{{ url_for('about') }}">
+                        <i class="bi bi-person me-1"></i>About
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ 'active' if request.endpoint in ['portfolio', 'project_detail'] }}" href="{{ url_for('portfolio') }}">
+                        <i class="bi bi-grid me-1"></i>Portofolio
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ 'active' if request.endpoint == 'contact' }}" href="{{ url_for('contact') }}">
+                        <i class="bi bi-envelope me-1"></i>Kontak
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- FLASH MESSAGES -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="flash-container position-fixed top-0 end-0 p-3" style="z-index:9999; margin-top:70px;">
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm" role="alert">
+                    {% if category == 'success' %}<i class="bi bi-check-circle-fill me-2"></i>
+                    {% elif category == 'danger' %}<i class="bi bi-x-circle-fill me-2"></i>
+                    {% elif category == 'warning' %}<i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    {% else %}<i class="bi bi-info-circle-fill me-2"></i>{% endif %}
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
+<!-- MAIN CONTENT -->
+<main>
+    {% block content %}{% endblock %}
+</main>
+
+<!-- FOOTER -->
+<footer class="footer-section py-5 mt-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-4 text-center text-md-start mb-3 mb-md-0">
+                <h5 class="fw-bold text-white mb-1">
+                    <span class="text-accent">&lt;</span>{{ profile.name.split()[0] if profile else 'Dev' }}<span class="text-accent">/&gt;</span>
+                </h5>
+                <small class="text-muted">{{ profile.headline if profile else 'Developer' }}</small>
+            </div>
+            <div class="col-md-4 text-center mb-3 mb-md-0">
+                <div class="d-flex justify-content-center gap-3">
+                    {% if profile and profile.github %}
+                    <a href="{{ profile.github }}" target="_blank" class="social-link" title="GitHub">
+                        <i class="bi bi-github fs-5"></i>
+                    </a>
+                    {% endif %}
+                    {% if profile and profile.linkedin %}
+                    <a href="{{ profile.linkedin }}" target="_blank" class="social-link" title="LinkedIn">
+                        <i class="bi bi-linkedin fs-5"></i>
+                    </a>
+                    {% endif %}
+                    {% if profile and profile.email %}
+                    <a href="mailto:{{ profile.email }}" class="social-link" title="Email">
+                        <i class="bi bi-envelope-fill fs-5"></i>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-md-4 text-center text-md-end">
+                <small class="text-muted">&copy; {{ 2024 }} {{ profile.name if profile else 'Developer' }}</small><br>
+                <small class="text-muted">Dibuat dengan <span class="text-danger">♥</span> menggunakan Flask</small>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- Bootstrap 5 JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Custom JS -->
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

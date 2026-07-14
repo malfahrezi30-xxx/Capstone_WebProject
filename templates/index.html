@@ -1,0 +1,192 @@
+{% extends 'base.html' %}
+
+{% block title %}Beranda | {{ profile.name if profile else 'Portofolio' }}{% endblock %}
+{% block meta_description %}{{ profile.headline if profile else 'Web Portfolio' }} — {{ profile.about[:120] if profile else '' }}{% endblock %}
+
+{% block content %}
+
+<!-- ===== HERO SECTION ===== -->
+<section class="hero-section d-flex align-items-center" id="hero">
+    <div class="hero-bg-animation"></div>
+    <div class="container position-relative">
+        <div class="row align-items-center min-vh-100 py-5">
+            <div class="col-lg-7 order-2 order-lg-1" data-aos="fade-right">
+                <p class="hero-greeting mb-2">
+                    <span class="badge-greeting"><i class="bi bi-hand-wave me-2"></i>Halo, Saya</span>
+                </p>
+                <h1 class="hero-title mb-3">
+                    {{ profile.name if profile else 'Nama Anda' }}
+                </h1>
+                <h2 class="hero-subtitle mb-4">
+                    <span class="typing-text" id="typingText">{{ profile.headline if profile else 'Developer' }}</span>
+                </h2>
+                <p class="hero-desc mb-5 text-muted">
+                    {{ profile.about if profile else 'Deskripsi singkat tentang diri Anda.' }}
+                </p>
+                <div class="d-flex flex-wrap gap-3">
+                    <a href="{{ url_for('portfolio') }}" class="btn btn-primary btn-lg px-4">
+                        <i class="bi bi-grid-fill me-2"></i>Lihat Portofolio
+                    </a>
+                    <a href="{{ url_for('contact') }}" class="btn btn-outline-light btn-lg px-4">
+                        <i class="bi bi-envelope me-2"></i>Hubungi Saya
+                    </a>
+                </div>
+                <!-- Social Links -->
+                <div class="mt-4 d-flex gap-3">
+                    {% if profile and profile.github %}
+                    <a href="{{ profile.github }}" target="_blank" class="social-icon-btn" title="GitHub">
+                        <i class="bi bi-github"></i>
+                    </a>
+                    {% endif %}
+                    {% if profile and profile.linkedin %}
+                    <a href="{{ profile.linkedin }}" target="_blank" class="social-icon-btn" title="LinkedIn">
+                        <i class="bi bi-linkedin"></i>
+                    </a>
+                    {% endif %}
+                    {% if profile and profile.email %}
+                    <a href="mailto:{{ profile.email }}" class="social-icon-btn" title="Email">
+                        <i class="bi bi-envelope-fill"></i>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-lg-5 order-1 order-lg-2 text-center mb-5 mb-lg-0" data-aos="fade-left">
+                <div class="hero-img-wrapper">
+                    {% if profile and profile.photo and profile.photo != 'default_profile.jpg' %}
+                        <img src="{{ url_for('static', filename='uploads/' + profile.photo) }}"
+                             alt="{{ profile.name }}" class="hero-img">
+                    {% else %}
+                        <div class="hero-img-placeholder">
+                            <i class="bi bi-person-fill"></i>
+                        </div>
+                    {% endif %}
+                    <div class="hero-img-ring"></div>
+                    <div class="hero-img-ring-2"></div>
+                </div>
+            </div>
+        </div>
+        <!-- Scroll Indicator -->
+        <div class="scroll-indicator position-absolute bottom-0 start-50 translate-middle-x pb-4">
+            <a href="#skills-preview" class="text-muted text-decoration-none d-flex flex-column align-items-center">
+                <small class="mb-2">Scroll ke bawah</small>
+                <i class="bi bi-chevron-double-down animate-bounce"></i>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- ===== SKILLS PREVIEW ===== -->
+{% if skills %}
+<section class="py-5 bg-section-alt" id="skills-preview">
+    <div class="container">
+        <div class="text-center mb-5" data-aos="fade-up">
+            <span class="section-badge">Tech Stack</span>
+            <h2 class="section-title mt-2">Keahlian Saya</h2>
+        </div>
+        <div class="row justify-content-center g-3">
+            {% for skill in skills %}
+            <div class="col-auto" data-aos="zoom-in" data-aos-delay="{{ loop.index0 * 50 }}">
+                <div class="skill-badge-home">
+                    <span class="skill-dot"></span>
+                    {{ skill.name }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="text-center mt-4">
+            <a href="{{ url_for('about') }}" class="btn btn-outline-primary">
+                Lihat Detail <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- ===== FEATURED PROJECTS ===== -->
+<section class="py-5" id="featured-projects">
+    <div class="container">
+        <div class="text-center mb-5" data-aos="fade-up">
+            <span class="section-badge">Karya Terbaik</span>
+            <h2 class="section-title mt-2">Proyek Terbaru</h2>
+            <p class="text-muted">Beberapa proyek yang telah saya kerjakan</p>
+        </div>
+
+        {% if projects %}
+        <div class="row g-4">
+            {% for project in projects %}
+            <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 100 }}">
+                <div class="project-card h-100">
+                    <div class="project-card-img-wrapper">
+                        {% if project.image_file and project.image_file != 'default.jpg' %}
+                            <img src="{{ url_for('static', filename='uploads/' + project.image_file) }}"
+                                 alt="{{ project.title }}" class="project-card-img">
+                        {% else %}
+                            <div class="project-card-img-placeholder">
+                                <i class="bi bi-code-slash"></i>
+                            </div>
+                        {% endif %}
+                        <div class="project-card-overlay">
+                            <a href="{{ url_for('project_detail', project_id=project.id) }}"
+                               class="btn btn-light btn-sm">
+                                <i class="bi bi-eye me-1"></i>Detail
+                            </a>
+                        </div>
+                    </div>
+                    <div class="project-card-body">
+                        <h5 class="project-card-title">{{ project.title }}</h5>
+                        <p class="project-card-desc text-muted">
+                            {{ project.description[:100] }}{% if project.description|length > 100 %}...{% endif %}
+                        </p>
+                        <div class="project-card-tech mb-3">
+                            {% for tech in project.get_technologies_list()[:4] %}
+                                <span class="tech-badge">{{ tech }}</span>
+                            {% endfor %}
+                        </div>
+                        <div class="d-flex gap-2">
+                            <a href="{{ url_for('project_detail', project_id=project.id) }}"
+                               class="btn btn-primary btn-sm flex-grow-1">Detail</a>
+                            {% if project.github_link %}
+                            <a href="{{ project.github_link }}" target="_blank"
+                               class="btn btn-outline-secondary btn-sm" title="GitHub">
+                                <i class="bi bi-github"></i>
+                            </a>
+                            {% endif %}
+                            {% if project.live_link %}
+                            <a href="{{ project.live_link }}" target="_blank"
+                               class="btn btn-outline-success btn-sm" title="Live Demo">
+                                <i class="bi bi-box-arrow-up-right"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="text-center mt-5">
+            <a href="{{ url_for('portfolio') }}" class="btn btn-primary btn-lg px-5">
+                <i class="bi bi-grid me-2"></i>Lihat Semua Proyek
+            </a>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-inbox display-1 text-muted opacity-25"></i>
+            <p class="mt-3 text-muted">Belum ada proyek yang ditambahkan.</p>
+            <a href="{{ url_for('login') }}" class="btn btn-outline-primary">Login untuk Tambah Proyek</a>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- ===== CTA SECTION ===== -->
+<section class="cta-section py-5">
+    <div class="container text-center" data-aos="fade-up">
+        <h2 class="fw-bold text-white mb-3">Tertarik Bekerja Sama?</h2>
+        <p class="text-white-50 mb-4">Saya terbuka untuk peluang baru dan proyek menarik.</p>
+        <a href="{{ url_for('contact') }}" class="btn btn-light btn-lg px-5">
+            <i class="bi bi-send me-2"></i>Kirim Pesan
+        </a>
+    </div>
+</section>
+
+{% endblock %}
