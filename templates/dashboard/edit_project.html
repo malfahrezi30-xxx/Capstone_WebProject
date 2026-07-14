@@ -1,0 +1,128 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% block title %}Edit Proyek{% endblock %}
+{% block page_title %}Edit Proyek: {{ project.title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="dash-card p-4">
+            <form action="{{ url_for('edit_project', project_id=project.id) }}" method="POST"
+                  enctype="multipart/form-data" id="editProjectForm">
+
+                <!-- Judul -->
+                <div class="mb-4">
+                    <label for="title" class="form-label text-white fw-medium">
+                        Judul Proyek <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" class="form-control dash-input" id="title" name="title"
+                           value="{{ project.title }}" required maxlength="150">
+                </div>
+
+                <!-- Deskripsi -->
+                <div class="mb-4">
+                    <label for="description" class="form-label text-white fw-medium">
+                        Deskripsi <span class="text-danger">*</span>
+                    </label>
+                    <textarea class="form-control dash-input" id="description" name="description"
+                              rows="5" required>{{ project.description }}</textarea>
+                </div>
+
+                <!-- Teknologi -->
+                <div class="mb-4">
+                    <label for="technologies" class="form-label text-white fw-medium">Teknologi yang Digunakan</label>
+                    <input type="text" class="form-control dash-input" id="technologies" name="technologies"
+                           value="{{ project.technologies or '' }}"
+                           placeholder="Python, Flask, SQLite (pisahkan dengan koma)">
+                </div>
+
+                <!-- Gambar saat ini + Upload baru -->
+                <div class="mb-4">
+                    <label class="form-label text-white fw-medium">Gambar Thumbnail</label>
+                    {% if project.image_file and project.image_file != 'default.jpg' %}
+                    <div class="mb-3">
+                        <small class="text-muted d-block mb-2">Gambar saat ini:</small>
+                        <img src="{{ url_for('static', filename='uploads/' + project.image_file) }}"
+                             alt="{{ project.title }}" id="currentImg"
+                             style="max-height:150px;border-radius:8px;object-fit:cover;">
+                    </div>
+                    {% endif %}
+                    <div class="upload-area" id="uploadArea" onclick="document.getElementById('image').click()">
+                        <div id="uploadPlaceholder">
+                            <i class="bi bi-cloud-upload fs-3 text-muted mb-2 d-block"></i>
+                            <p class="text-muted mb-0 small">Klik untuk ganti gambar (opsional)</p>
+                            <small class="text-muted">PNG, JPG, JPEG, GIF, WEBP — Maks. 5MB</small>
+                        </div>
+                        <img id="imagePreview" src="" alt="Preview" class="d-none"
+                             style="max-height:160px;border-radius:8px;object-fit:cover;">
+                    </div>
+                    <input type="file" class="d-none" id="image" name="image"
+                           accept=".png,.jpg,.jpeg,.gif,.webp">
+                </div>
+
+                <!-- Links -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label for="github_link" class="form-label text-white fw-medium">Link GitHub</label>
+                        <div class="input-group">
+                            <span class="input-group-text dash-input-addon"><i class="bi bi-github text-muted"></i></span>
+                            <input type="url" class="form-control dash-input border-start-0"
+                                   id="github_link" name="github_link"
+                                   value="{{ project.github_link or '' }}">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="live_link" class="form-label text-white fw-medium">Link Live Demo</label>
+                        <div class="input-group">
+                            <span class="input-group-text dash-input-addon"><i class="bi bi-globe text-muted"></i></span>
+                            <input type="url" class="form-control dash-input border-start-0"
+                                   id="live_link" name="live_link"
+                                   value="{{ project.live_link or '' }}">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Buttons -->
+                <div class="d-flex gap-3">
+                    <button type="submit" class="btn btn-lg flex-grow-1" style="background:#6366f1;color:#fff;">
+                        <i class="bi bi-save me-2"></i>Simpan Perubahan
+                    </button>
+                    <a href="{{ url_for('dashboard_projects') }}" class="btn btn-lg btn-outline-secondary">
+                        <i class="bi bi-x me-1"></i>Batal
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dash-input { background:#0f1117; border:1px solid rgba(255,255,255,.1); color:#e2e8f0; border-radius:10px; }
+    .dash-input:focus { background:#0f1117; border-color:#6366f1; color:#e2e8f0; box-shadow:0 0 0 3px rgba(99,102,241,.15); }
+    .dash-input-addon { background:#161b27; border:1px solid rgba(255,255,255,.1); border-right:none; }
+    .upload-area { border:2px dashed rgba(255,255,255,.15); border-radius:12px; padding:1.5rem; text-align:center; cursor:pointer; transition:.2s; background:#0f1117; }
+    .upload-area:hover { border-color:#6366f1; background:rgba(99,102,241,.05); }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('image').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            const preview = document.getElementById('imagePreview');
+            const placeholder = document.getElementById('uploadPlaceholder');
+            const current = document.getElementById('currentImg');
+            preview.src = ev.target.result;
+            preview.classList.remove('d-none');
+            placeholder.classList.add('d-none');
+            if (current) current.classList.add('d-none');
+        };
+        reader.readAsDataURL(file);
+    }
+});
+</script>
+{% endblock %}

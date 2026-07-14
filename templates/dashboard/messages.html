@@ -1,0 +1,143 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% block title %}Kotak Masuk Pesan{% endblock %}
+{% block page_title %}Kotak Masuk Pesan{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <p class="text-muted mb-0">
+        Total <strong class="text-white">{{ messages|length }}</strong> pesan —
+        <span class="text-danger fw-medium">{{ messages|selectattr('is_read', 'false')|list|length }} belum dibaca</span>
+    </p>
+</div>
+
+<div class="dash-card">
+    {% if messages %}
+    <div class="table-responsive">
+        <table class="table dash-table mb-0 align-middle">
+            <thead>
+                <tr>
+                    <th style="width:40px;"></th>
+                    <th>Pengirim</th>
+                    <th>Email</th>
+                    <th>Pesan</th>
+                    <th>Waktu</th>
+                    <th style="width:130px;">Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for msg in messages %}
+                <tr class="{{ '' if msg.is_read else 'unread-row' }}">
+                    <td>
+                        <div class="rounded-circle d-flex align-items-center justify-content-center"
+                             style="width:36px;height:36px;background:rgba(99,102,241,.2);flex-shrink:0;">
+                            <span style="color:#a5b4fc;font-weight:700;font-size:.85rem;">
+                                {{ msg.name[0]|upper }}
+                            </span>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="{{ 'text-white fw-semibold' if not msg.is_read else 'text-muted' }}">
+                            {{ msg.name }}
+                        </span>
+                        {% if not msg.is_read %}
+                        <span class="badge-unread ms-2">Baru</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="mailto:{{ msg.email }}" class="text-muted text-decoration-none small">
+                            {{ msg.email }}
+                        </a>
+                    </td>
+                    <td>
+                        <span class="{{ 'text-white' if not msg.is_read else 'text-muted' }} small"
+                              title="{{ msg.message }}">
+                            {{ msg.message[:80] }}{% if msg.message|length > 80 %}...{% endif %}
+                        </span>
+                    </td>
+                    <td>
+                        <small class="text-muted">{{ msg.created_at.strftime('%d %b %Y') }}</small>
+                        <br>
+                        <small class="text-muted" style="font-size:.72rem;">{{ msg.created_at.strftime('%H:%M') }}</small>
+                    </td>
+                    <td>
+                        <!-- Toggle Read -->
+                        <form action="{{ url_for('mark_message_read', msg_id=msg.id) }}" method="POST" class="d-inline">
+                            <button type="submit" class="btn btn-sm py-1 px-2 me-1
+                                {{ 'btn-outline-secondary' if msg.is_read else 'btn-outline-success' }}"
+                                title="{{ 'Tandai belum dibaca' if msg.is_read else 'Tandai sudah dibaca' }}">
+                                <i class="bi bi-{{ 'envelope' if msg.is_read else 'envelope-check' }}" style="font-size:.8rem;"></i>
+                            </button>
+                        </form>
+                        <!-- Lihat Pesan Lengkap -->
+                        <button type="button" class="btn btn-sm btn-outline-primary py-1 px-2 me-1"
+                                title="Lihat pesan"
+                                onclick="showMessage('{{ msg.name }}', '{{ msg.email }}', `{{ msg.message }}`, '{{ msg.created_at.strftime('%d %b %Y %H:%M') }}')">
+                            <i class="bi bi-eye" style="font-size:.8rem;"></i>
+                        </button>
+                        <!-- Hapus -->
+                        <form action="{{ url_for('delete_message', msg_id=msg.id) }}" method="POST" class="d-inline"
+                              onsubmit="return confirm('Hapus pesan dari {{ msg.name }}?')">
+                            <button type="submit" class="btn btn-sm btn-outline-danger py-1 px-2" title="Hapus">
+                                <i class="bi bi-trash" style="font-size:.8rem;"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="bi bi-inbox display-1 text-muted opacity-25"></i>
+        <h5 class="text-muted mt-4">Kotak Masuk Kosong</h5>
+        <p class="text-muted">Belum ada pesan yang masuk dari form kontak.</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal Lihat Pesan Lengkap -->
+<div class="modal fade" id="messageModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background:#1e2536;border:1px solid rgba(255,255,255,.1);">
+            <div class="modal-header border-secondary border-opacity-25">
+                <div>
+                    <h5 class="modal-title text-white mb-0" id="modalSender"></h5>
+                    <small class="text-muted" id="modalEmail"></small>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted small mb-2" id="modalTime"></p>
+                <p class="text-white lh-lg" id="modalMessage" style="white-space:pre-wrap;"></p>
+            </div>
+            <div class="modal-footer border-secondary border-opacity-25">
+                <a href="#" class="btn btn-sm btn-outline-secondary" id="replyBtn">
+                    <i class="bi bi-reply me-1"></i>Balas via Email
+                </a>
+                <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .unread-row { background: rgba(99,102,241,.05); }
+    .unread-row:hover { background: rgba(99,102,241,.1); }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showMessage(name, email, message, time) {
+    document.getElementById('modalSender').textContent = name;
+    document.getElementById('modalEmail').textContent = email;
+    document.getElementById('modalMessage').textContent = message;
+    document.getElementById('modalTime').textContent = 'Dikirim: ' + time;
+    document.getElementById('replyBtn').href = 'mailto:' + email + '?subject=Re: Pesan dari Portfolio';
+    new bootstrap.Modal(document.getElementById('messageModal')).show();
+}
+</script>
+{% endblock %}

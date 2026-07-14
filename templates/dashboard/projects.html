@@ -1,0 +1,147 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% block title %}Manajemen Proyek{% endblock %}
+{% block page_title %}Manajemen Proyek{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <p class="text-muted mb-0">Total <strong class="text-white">{{ projects|length }}</strong> proyek</p>
+    <a href="{{ url_for('add_project') }}" class="btn" style="background:#6366f1;color:#fff;">
+        <i class="bi bi-plus-lg me-2"></i>Tambah Proyek
+    </a>
+</div>
+
+<div class="dash-card">
+    {% if projects %}
+    <div class="table-responsive">
+        <table class="table dash-table mb-0">
+            <thead>
+                <tr>
+                    <th style="width:60px;">#</th>
+                    <th>Proyek</th>
+                    <th>Teknologi</th>
+                    <th>Link</th>
+                    <th>Tanggal</th>
+                    <th style="width:140px;">Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for project in projects %}
+                <tr>
+                    <td>
+                        <div class="rounded-2 overflow-hidden" style="width:50px;height:40px;background:#0f1117;">
+                            {% if project.image_file and project.image_file != 'default.jpg' %}
+                            <img src="{{ url_for('static', filename='uploads/' + project.image_file) }}"
+                                 style="width:100%;height:100%;object-fit:cover;" alt="">
+                            {% else %}
+                            <div class="d-flex align-items-center justify-content-center h-100">
+                                <i class="bi bi-code-slash text-muted"></i>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td>
+                        <span class="text-white fw-medium">{{ project.title }}</span>
+                        <br>
+                        <small class="text-muted">{{ project.description[:60] }}...</small>
+                    </td>
+                    <td>
+                        {% for tech in project.get_technologies_list()[:3] %}
+                        <span class="badge mb-1" style="background:rgba(99,102,241,.2);color:#a5b4fc;font-size:.7rem;">{{ tech }}</span>
+                        {% endfor %}
+                        {% if project.get_technologies_list()|length > 3 %}
+                        <span class="badge" style="background:rgba(255,255,255,.1);color:#94a3b8;font-size:.7rem;">
+                            +{{ project.get_technologies_list()|length - 3 }}
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if project.github_link %}
+                        <a href="{{ project.github_link }}" target="_blank" class="btn btn-sm btn-outline-secondary py-0 me-1" title="GitHub">
+                            <i class="bi bi-github"></i>
+                        </a>
+                        {% endif %}
+                        {% if project.live_link %}
+                        <a href="{{ project.live_link }}" target="_blank" class="btn btn-sm btn-outline-success py-0" title="Live Demo">
+                            <i class="bi bi-box-arrow-up-right"></i>
+                        </a>
+                        {% endif %}
+                    </td>
+                    <td><small class="text-muted">{{ project.created_at.strftime('%d %b %Y') }}</small></td>
+                    <td>
+                        <a href="{{ url_for('project_detail', project_id=project.id) }}" target="_blank"
+                           class="btn btn-sm btn-outline-secondary py-1 px-2" title="Lihat">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        <a href="{{ url_for('edit_project', project_id=project.id) }}"
+                           class="btn btn-sm btn-outline-primary py-1 px-2 mx-1" title="Edit">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <!-- Delete dengan konfirmasi -->
+                        <button type="button" class="btn btn-sm btn-outline-danger py-1 px-2"
+                                title="Hapus"
+                                onclick="confirmDelete({{ project.id }}, '{{ project.title }}')">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                        <!-- Hidden delete form -->
+                        <form id="delete-form-{{ project.id }}"
+                              action="{{ url_for('delete_project', project_id=project.id) }}"
+                              method="POST" class="d-none">
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="bi bi-inbox display-1 text-muted opacity-25"></i>
+        <h5 class="text-muted mt-4">Belum Ada Proyek</h5>
+        <p class="text-muted">Mulai tambahkan proyek portofolio Anda!</p>
+        <a href="{{ url_for('add_project') }}" class="btn" style="background:#6366f1;color:#fff;">
+            <i class="bi bi-plus-lg me-2"></i>Tambah Proyek Pertama
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal Konfirmasi Hapus -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background:#1e2536;border:1px solid rgba(255,255,255,.1);">
+            <div class="modal-header border-secondary border-opacity-25">
+                <h5 class="modal-title text-white">
+                    <i class="bi bi-exclamation-triangle text-danger me-2"></i>Konfirmasi Hapus
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted">Apakah Anda yakin ingin menghapus proyek <strong class="text-white" id="deleteProjectName"></strong>?</p>
+                <p class="text-danger small mb-0"><i class="bi bi-info-circle me-1"></i>Tindakan ini tidak dapat dibatalkan.</p>
+            </div>
+            <div class="modal-footer border-secondary border-opacity-25">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                    <i class="bi bi-trash me-1"></i>Hapus
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let deleteProjectId = null;
+function confirmDelete(id, name) {
+    deleteProjectId = id;
+    document.getElementById('deleteProjectName').textContent = name;
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+    if (deleteProjectId) {
+        document.getElementById('delete-form-' + deleteProjectId).submit();
+    }
+});
+</script>
+{% endblock %}

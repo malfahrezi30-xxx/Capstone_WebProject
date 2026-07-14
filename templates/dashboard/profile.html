@@ -1,0 +1,199 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% block title %}Manajemen Profil{% endblock %}
+{% block page_title %}Profil & Skill{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+
+    <!-- Form Profil -->
+    <div class="col-lg-7">
+        <div class="dash-card p-4 mb-4">
+            <h6 class="text-white fw-semibold mb-4">
+                <i class="bi bi-person-gear me-2 text-muted"></i>Edit Data Profil
+            </h6>
+            <form action="{{ url_for('dashboard_profile') }}" method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="action" value="update_profile">
+
+                <!-- Foto Profil -->
+                <div class="mb-4 text-center">
+                    <div class="profile-photo-wrapper mx-auto mb-3">
+                        {% if profile.photo and profile.photo != 'default_profile.jpg' %}
+                        <img src="{{ url_for('static', filename='uploads/' + profile.photo) }}"
+                             alt="{{ profile.name }}" id="photoPreview"
+                             style="width:100px;height:100px;border-radius:50%;object-fit:cover;border:3px solid #6366f1;">
+                        {% else %}
+                        <div id="photoPreview" style="width:100px;height:100px;border-radius:50%;background:#1e2536;border:3px solid #6366f1;display:flex;align-items:center;justify-content:center;">
+                            <i class="bi bi-person-fill text-muted fs-2"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-secondary"
+                            onclick="document.getElementById('photo').click()">
+                        <i class="bi bi-camera me-1"></i>Ganti Foto
+                    </button>
+                    <input type="file" id="photo" name="photo" class="d-none"
+                           accept=".png,.jpg,.jpeg,.gif,.webp">
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label text-white fw-medium">Nama Lengkap</label>
+                        <input type="text" class="form-control dash-input" name="name"
+                               value="{{ profile.name }}" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-white fw-medium">Headline / Profesi</label>
+                        <input type="text" class="form-control dash-input" name="headline"
+                               value="{{ profile.headline or '' }}"
+                               placeholder="Python Developer | Mahasiswa Informatika">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label text-white fw-medium">About Singkat (tampil di Beranda)</label>
+                        <textarea class="form-control dash-input" name="about" rows="3"
+                                  placeholder="Deskripsi singkat...">{{ profile.about or '' }}</textarea>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label text-white fw-medium">About Lengkap (tampil di halaman About)</label>
+                        <textarea class="form-control dash-input" name="about_detail" rows="4"
+                                  placeholder="Deskripsi lengkap...">{{ profile.about_detail or '' }}</textarea>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label text-white fw-medium">Pendidikan</label>
+                        <textarea class="form-control dash-input" name="education" rows="2"
+                                  placeholder="S1 Teknik Informatika, Universitas XYZ, 2022-sekarang">{{ profile.education or '' }}</textarea>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-white fw-medium">Email</label>
+                        <input type="email" class="form-control dash-input" name="email"
+                               value="{{ profile.email or '' }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-white fw-medium">GitHub URL</label>
+                        <input type="url" class="form-control dash-input" name="github"
+                               value="{{ profile.github or '' }}"
+                               placeholder="https://github.com/username">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-white fw-medium">LinkedIn URL</label>
+                        <input type="url" class="form-control dash-input" name="linkedin"
+                               value="{{ profile.linkedin or '' }}"
+                               placeholder="https://linkedin.com/in/username">
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn w-100" style="background:#6366f1;color:#fff;">
+                            <i class="bi bi-save me-2"></i>Simpan Profil
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Skills -->
+    <div class="col-lg-5">
+        <!-- Tambah Skill -->
+        <div class="dash-card p-4 mb-4">
+            <h6 class="text-white fw-semibold mb-4">
+                <i class="bi bi-plus-circle me-2 text-muted"></i>Tambah Skill
+            </h6>
+            <form action="{{ url_for('dashboard_profile') }}" method="POST">
+                <input type="hidden" name="action" value="add_skill">
+                <div class="mb-3">
+                    <label class="form-label text-white fw-medium">Nama Skill</label>
+                    <input type="text" class="form-control dash-input" name="skill_name"
+                           placeholder="Python, Flask, React..." required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-white fw-medium">Kategori</label>
+                    <select class="form-select dash-input" name="skill_category">
+                        <option value="Technical">Technical</option>
+                        <option value="Framework">Framework</option>
+                        <option value="Database">Database</option>
+                        <option value="Tools">Tools</option>
+                        <option value="Soft Skill">Soft Skill</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-white fw-medium">Level: <span id="levelVal">80</span>%</label>
+                    <input type="range" class="form-range" name="skill_level"
+                           min="10" max="100" value="80" id="skillLevel"
+                           oninput="document.getElementById('levelVal').textContent=this.value">
+                </div>
+                <button type="submit" class="btn w-100 btn-outline-primary">
+                    <i class="bi bi-plus-lg me-1"></i>Tambah Skill
+                </button>
+            </form>
+        </div>
+
+        <!-- Daftar Skill -->
+        <div class="dash-card">
+            <div class="dash-card-header">
+                <h6 class="text-white fw-semibold mb-0">
+                    <i class="bi bi-list-check me-2 text-muted"></i>Daftar Skill ({{ skills|length }})
+                </h6>
+            </div>
+            <div class="p-3" style="max-height:400px;overflow-y:auto;">
+                {% if skills %}
+                    {% for skill in skills %}
+                    <div class="d-flex align-items-center justify-content-between py-2 border-bottom border-secondary border-opacity-10">
+                        <div class="flex-grow-1 me-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="text-white small fw-medium">{{ skill.name }}</span>
+                                <span style="color:#818cf8;font-size:.78rem;">{{ skill.level }}%</span>
+                            </div>
+                            <div style="background:rgba(255,255,255,.1);border-radius:4px;height:4px;">
+                                <div style="width:{{ skill.level }}%;background:#6366f1;border-radius:4px;height:4px;"></div>
+                            </div>
+                            <small class="text-muted" style="font-size:.72rem;">{{ skill.category }}</small>
+                        </div>
+                        <form action="{{ url_for('delete_skill', skill_id=skill.id) }}" method="POST"
+                              onsubmit="return confirm('Hapus skill {{ skill.name }}?')">
+                            <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2">
+                                <i class="bi bi-trash" style="font-size:.75rem;"></i>
+                            </button>
+                        </form>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                <div class="text-center py-3">
+                    <i class="bi bi-stars text-muted opacity-25 display-4"></i>
+                    <p class="text-muted small mt-2">Belum ada skill. Tambahkan di atas!</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dash-input { background:#0f1117; border:1px solid rgba(255,255,255,.1); color:#e2e8f0; border-radius:10px; }
+    .dash-input:focus { background:#0f1117; border-color:#6366f1; color:#e2e8f0; box-shadow:0 0 0 3px rgba(99,102,241,.15); }
+    .form-select.dash-input option { background:#0f1117; }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('photo').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            const preview = document.getElementById('photoPreview');
+            if (preview.tagName === 'IMG') {
+                preview.src = ev.target.result;
+            } else {
+                const img = document.createElement('img');
+                img.src = ev.target.result;
+                img.id = 'photoPreview';
+                img.style = 'width:100px;height:100px;border-radius:50%;object-fit:cover;border:3px solid #6366f1;';
+                preview.parentNode.replaceChild(img, preview);
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+});
+</script>
+{% endblock %}

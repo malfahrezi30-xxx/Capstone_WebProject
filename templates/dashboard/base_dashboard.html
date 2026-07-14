@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Dashboard{% endblock %} | Admin Panel</title>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_css %}{% endblock %}
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #0f1117; }
+        .dash-sidebar { width: 260px; min-height: 100vh; background: #161b27; position: fixed; top:0; left:0; z-index:1000; transition: all 0.3s; }
+        .dash-main { margin-left: 260px; min-height: 100vh; padding: 0; }
+        .sidebar-brand { padding: 1.5rem; border-bottom: 1px solid rgba(255,255,255,.07); }
+        .sidebar-nav .nav-link { color: rgba(255,255,255,.6); padding: .75rem 1.5rem; border-radius: 8px; margin: 2px 12px; font-size: .9rem; transition: all .2s; }
+        .sidebar-nav .nav-link:hover, .sidebar-nav .nav-link.active { color: #fff; background: rgba(99,102,241,.2); }
+        .sidebar-nav .nav-link.active { color: #818cf8; border-left: 3px solid #818cf8; }
+        .sidebar-nav .nav-link i { width: 20px; }
+        .dash-topbar { background: #161b27; border-bottom: 1px solid rgba(255,255,255,.07); padding: 1rem 1.5rem; position: sticky; top: 0; z-index: 100; }
+        .dash-content { padding: 2rem; }
+        .stat-card { background: #1e2536; border-radius: 16px; border: 1px solid rgba(255,255,255,.06); padding: 1.5rem; transition: transform .2s; }
+        .stat-card:hover { transform: translateY(-2px); }
+        .stat-icon { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; }
+        .dash-card { background: #1e2536; border-radius: 16px; border: 1px solid rgba(255,255,255,.06); }
+        .dash-card-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,.07); }
+        .dash-table th { background: #161b27; color: rgba(255,255,255,.5); font-size: .8rem; text-transform: uppercase; letter-spacing: .05em; border: none; }
+        .dash-table td { border-color: rgba(255,255,255,.05); color: #e2e8f0; vertical-align: middle; }
+        .badge-unread { background: rgba(239,68,68,.15); color: #f87171; border-radius: 6px; padding: 3px 8px; font-size: .75rem; }
+        .badge-read { background: rgba(34,197,94,.15); color: #4ade80; border-radius: 6px; padding: 3px 8px; font-size: .75rem; }
+        @media (max-width: 768px) { .dash-sidebar { transform: translateX(-100%); } .dash-main { margin-left: 0; } }
+    </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="dash-sidebar d-flex flex-column">
+    <div class="sidebar-brand">
+        <a href="{{ url_for('dashboard_index') }}" class="text-decoration-none">
+            <h5 class="text-white fw-bold mb-0"><span class="text-accent">&lt;</span>Admin<span class="text-accent">/&gt;</span></h5>
+            <small class="text-muted">{{ session.get('username', 'Admin') }}</small>
+        </a>
+    </div>
+    <ul class="sidebar-nav nav flex-column py-3 flex-grow-1">
+        <li class="nav-item">
+            <a class="nav-link {{ 'active' if request.endpoint == 'dashboard_index' }}"
+               href="{{ url_for('dashboard_index') }}">
+                <i class="bi bi-speedometer2 me-2"></i>Dashboard
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {{ 'active' if request.endpoint in ['dashboard_projects','add_project','edit_project'] }}"
+               href="{{ url_for('dashboard_projects') }}">
+                <i class="bi bi-grid me-2"></i>Proyek
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {{ 'active' if request.endpoint == 'dashboard_profile' }}"
+               href="{{ url_for('dashboard_profile') }}">
+                <i class="bi bi-person me-2"></i>Profil & Skill
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {{ 'active' if request.endpoint == 'dashboard_messages' }}"
+               href="{{ url_for('dashboard_messages') }}">
+                <i class="bi bi-envelope me-2"></i>Pesan
+                {% if unread_count > 0 %}
+                <span class="badge bg-danger ms-auto rounded-pill">{{ unread_count }}</span>
+                {% endif %}
+            </a>
+        </li>
+        <li><hr class="border-secondary mx-3"></li>
+        <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('index') }}" target="_blank">
+                <i class="bi bi-box-arrow-up-right me-2"></i>Lihat Website
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link text-danger" href="{{ url_for('logout') }}">
+                <i class="bi bi-box-arrow-left me-2"></i>Logout
+            </a>
+        </li>
+    </ul>
+</nav>
+
+<!-- MAIN CONTENT -->
+<div class="dash-main">
+    <!-- Top Bar -->
+    <div class="dash-topbar d-flex align-items-center justify-content-between">
+        <h6 class="text-white mb-0 fw-semibold">{% block page_title %}Dashboard{% endblock %}</h6>
+        <div class="d-flex align-items-center gap-3">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% endwith %}
+            <small class="text-muted">{{ session.get('username', 'Admin') }}</small>
+            <div class="rounded-circle bg-accent d-flex align-items-center justify-content-center"
+                 style="width:34px;height:34px;background:#6366f1 !important;">
+                <span class="text-white fw-bold" style="font-size:.85rem;">
+                    {{ session.get('username','A')[0]|upper }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="px-4 pt-3">
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {% if category == 'success' %}<i class="bi bi-check-circle-fill me-2"></i>
+                {% elif category == 'danger' %}<i class="bi bi-x-circle-fill me-2"></i>
+                {% else %}<i class="bi bi-info-circle-fill me-2"></i>{% endif %}
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Content -->
+    <div class="dash-content">
+        {% block content %}{% endblock %}
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

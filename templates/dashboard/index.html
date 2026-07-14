@@ -1,0 +1,201 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% block title %}Dashboard Utama{% endblock %}
+{% block page_title %}Dashboard Overview{% endblock %}
+
+{% block content %}
+
+<!-- Stat Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <p class="text-muted small mb-1">Total Proyek</p>
+                    <h2 class="text-white fw-bold mb-0">{{ total_projects }}</h2>
+                    <small class="text-success"><i class="bi bi-arrow-up-short"></i>Di database</small>
+                </div>
+                <div class="stat-icon" style="background:rgba(99,102,241,.15);">
+                    <i class="bi bi-grid-fill text-indigo-400" style="color:#818cf8;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <p class="text-muted small mb-1">Total Pesan</p>
+                    <h2 class="text-white fw-bold mb-0">{{ total_messages }}</h2>
+                    <small class="text-muted">Semua pesan masuk</small>
+                </div>
+                <div class="stat-icon" style="background:rgba(59,130,246,.15);">
+                    <i class="bi bi-envelope-fill" style="color:#60a5fa;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <p class="text-muted small mb-1">Pesan Belum Dibaca</p>
+                    <h2 class="fw-bold mb-0" style="color:{% if unread_messages > 0 %}#f87171{% else %}#4ade80{% endif %};">
+                        {{ unread_messages }}
+                    </h2>
+                    <small class="{% if unread_messages > 0 %}text-danger{% else %}text-success{% endif %}">
+                        {% if unread_messages > 0 %}Perlu diperhatikan{% else %}Semua sudah dibaca{% endif %}
+                    </small>
+                </div>
+                <div class="stat-icon" style="background:rgba(239,68,68,.15);">
+                    <i class="bi bi-bell-fill" style="color:#f87171;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <p class="text-muted small mb-1">Status</p>
+                    <h2 class="fw-bold mb-0" style="color:#4ade80;">Online</h2>
+                    <small class="text-success">Website aktif</small>
+                </div>
+                <div class="stat-icon" style="background:rgba(34,197,94,.15);">
+                    <i class="bi bi-check-circle-fill" style="color:#4ade80;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Shortcut Actions -->
+<div class="row g-3 mb-4">
+    <div class="col-12">
+        <div class="dash-card p-3">
+            <h6 class="text-white fw-semibold mb-3"><i class="bi bi-lightning-charge me-2 text-warning"></i>Aksi Cepat</h6>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{{ url_for('add_project') }}" class="btn btn-sm" style="background:#6366f1;color:#fff;">
+                    <i class="bi bi-plus-lg me-1"></i>Tambah Proyek
+                </a>
+                <a href="{{ url_for('dashboard_profile') }}" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-person-gear me-1"></i>Edit Profil
+                </a>
+                <a href="{{ url_for('dashboard_messages') }}" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-envelope me-1"></i>Kotak Masuk
+                    {% if unread_messages > 0 %}
+                    <span class="badge bg-danger ms-1">{{ unread_messages }}</span>
+                    {% endif %}
+                </a>
+                <a href="{{ url_for('index') }}" target="_blank" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-eye me-1"></i>Lihat Website
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Proyek Terbaru -->
+    <div class="col-lg-7">
+        <div class="dash-card">
+            <div class="dash-card-header d-flex justify-content-between align-items-center">
+                <h6 class="text-white fw-semibold mb-0">
+                    <i class="bi bi-clock-history me-2 text-muted"></i>Proyek Terbaru
+                </h6>
+                <a href="{{ url_for('dashboard_projects') }}" class="btn btn-sm btn-outline-secondary">
+                    Lihat Semua
+                </a>
+            </div>
+            <div class="p-3">
+                {% if recent_projects %}
+                <div class="table-responsive">
+                    <table class="table dash-table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Proyek</th>
+                                <th>Teknologi</th>
+                                <th>Tanggal</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for proj in recent_projects %}
+                            <tr>
+                                <td>
+                                    <span class="text-white fw-medium">{{ proj.title }}</span>
+                                </td>
+                                <td>
+                                    {% for tech in proj.get_technologies_list()[:2] %}
+                                    <span class="badge" style="background:rgba(99,102,241,.2);color:#a5b4fc;font-size:.7rem;">{{ tech }}</span>
+                                    {% endfor %}
+                                </td>
+                                <td><small class="text-muted">{{ proj.created_at.strftime('%d %b %Y') }}</small></td>
+                                <td>
+                                    <a href="{{ url_for('edit_project', project_id=proj.id) }}"
+                                       class="btn btn-xs btn-outline-secondary btn-sm py-0 px-2">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-inbox display-4 text-muted opacity-25"></i>
+                    <p class="text-muted mt-2 mb-3">Belum ada proyek.</p>
+                    <a href="{{ url_for('add_project') }}" class="btn btn-sm" style="background:#6366f1;color:#fff;">
+                        <i class="bi bi-plus-lg me-1"></i>Tambah Sekarang
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Pesan Terbaru -->
+    <div class="col-lg-5">
+        <div class="dash-card">
+            <div class="dash-card-header d-flex justify-content-between align-items-center">
+                <h6 class="text-white fw-semibold mb-0">
+                    <i class="bi bi-envelope me-2 text-muted"></i>Pesan Terbaru
+                </h6>
+                <a href="{{ url_for('dashboard_messages') }}" class="btn btn-sm btn-outline-secondary">Lihat Semua</a>
+            </div>
+            <div class="p-3">
+                {% if recent_messages %}
+                    {% for msg in recent_messages %}
+                    <div class="d-flex align-items-start gap-3 py-2 border-bottom border-secondary border-opacity-10">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                             style="width:36px;height:36px;background:rgba(99,102,241,.2);">
+                            <span style="color:#a5b4fc;font-weight:600;font-size:.85rem;">
+                                {{ msg.name[0]|upper }}
+                            </span>
+                        </div>
+                        <div class="flex-grow-1 overflow-hidden">
+                            <div class="d-flex justify-content-between">
+                                <span class="text-white fw-medium small">{{ msg.name }}</span>
+                                {% if not msg.is_read %}
+                                <span class="badge-unread">Baru</span>
+                                {% endif %}
+                            </div>
+                            <p class="text-muted mb-0" style="font-size:.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                                {{ msg.message[:50] }}...
+                            </p>
+                            <small class="text-muted" style="font-size:.75rem;">{{ msg.created_at.strftime('%d %b, %H:%M') }}</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-inbox display-4 text-muted opacity-25"></i>
+                    <p class="text-muted mt-2 mb-0 small">Belum ada pesan masuk.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
