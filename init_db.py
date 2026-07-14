@@ -5,12 +5,10 @@ Jalankan: python init_db.py
 
 import os
 import sys
-
-# Pastikan path project sudah benar
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from app import app, db
-from models import Project, Message, Profile, Skill
+from models import Project, Message, Profile, Skill, Settings
 
 
 def init_database():
@@ -133,12 +131,23 @@ def init_database():
                 db.session.add(Message(**m))
             print(f"[OK] {len(messages_data)} pesan demo berhasil ditambahkan.")
 
+        # ─── Settings (Kredensial Admin & Pembaca) ────────────
+        if not Settings.query.first():
+            s = Settings()
+            s.admin_username = 'admin'
+            s.set_admin_password('admin123')
+            s.admin_email = 'm.alfahrezi30@gmail.com'
+            s.reader_enabled = True
+            s.set_reader_password('visitor123')
+            db.session.add(s)
+            print("[OK] Settings default berhasil dibuat.")
+
         db.session.commit()
         print("\n[DONE] Database berhasil diinisialisasi!")
-        print("   Username : admin")
-        print("   Password : admin123")
+        print("   Admin    : admin / admin123")
+        print("   Pembaca  : visitor123 (tab Pembaca di halaman login)")
         print("   URL      : http://127.0.0.1:5000")
-        print("   Dashboard: http://127.0.0.1:5000/login\n")
+        print("   Login    : http://127.0.0.1:5000/login\n")
 
 
 if __name__ == '__main__':

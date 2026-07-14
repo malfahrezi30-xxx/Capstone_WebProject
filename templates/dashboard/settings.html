@@ -1,0 +1,261 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% block title %}Pengaturan Akun{% endblock %}
+{% block page_title %}Pengaturan Akun & Akses{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+
+    <!-- ── Kolom Kiri: Admin Account ── -->
+    <div class="col-lg-7">
+
+        <!-- Ganti Username -->
+        <div class="dash-card p-4 mb-4">
+            <h6 class="text-white fw-semibold mb-4">
+                <i class="bi bi-person-badge me-2" style="color:#818cf8;"></i>
+                Ganti Username Admin
+            </h6>
+            <form action="{{ url_for('dashboard_settings') }}" method="POST">
+                <input type="hidden" name="action" value="change_username">
+                <div class="mb-3">
+                    <label class="form-label text-muted small">Username Saat Ini</label>
+                    <div class="form-control dash-input-readonly">
+                        <i class="bi bi-person me-2 text-muted"></i>{{ settings.admin_username }}
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="new_username" class="form-label text-white fw-medium">Username Baru</label>
+                    <input type="text" class="form-control dash-input" id="new_username"
+                           name="new_username" placeholder="Minimal 3 karakter" minlength="3" required>
+                </div>
+                <button type="submit" class="btn btn-sm btn-outline-primary px-4">
+                    <i class="bi bi-check-lg me-1"></i>Simpan Username
+                </button>
+            </form>
+        </div>
+
+        <!-- Ganti Password Admin -->
+        <div class="dash-card p-4 mb-4">
+            <h6 class="text-white fw-semibold mb-4">
+                <i class="bi bi-lock me-2" style="color:#818cf8;"></i>
+                Ganti Password Admin
+            </h6>
+            <form action="{{ url_for('dashboard_settings') }}" method="POST" id="changePasswordForm">
+                <input type="hidden" name="action" value="change_password">
+                <div class="mb-3">
+                    <label for="current_password" class="form-label text-white fw-medium">Password Saat Ini</label>
+                    <div class="position-relative">
+                        <input type="password" class="form-control dash-input" id="current_password"
+                               name="current_password" placeholder="Masukkan password saat ini" required>
+                        <span class="toggle-pw-btn" onclick="togglePw('current_password', 'eye1')">
+                            <i class="bi bi-eye" id="eye1"></i>
+                        </span>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="new_password" class="form-label text-white fw-medium">Password Baru</label>
+                    <div class="position-relative">
+                        <input type="password" class="form-control dash-input" id="new_password"
+                               name="new_password" placeholder="Minimal 6 karakter" minlength="6" required>
+                        <span class="toggle-pw-btn" onclick="togglePw('new_password', 'eye2')">
+                            <i class="bi bi-eye" id="eye2"></i>
+                        </span>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label for="confirm_password" class="form-label text-white fw-medium">Konfirmasi Password Baru</label>
+                    <div class="position-relative">
+                        <input type="password" class="form-control dash-input" id="confirm_password"
+                               name="confirm_password" placeholder="Ulangi password baru" required>
+                        <span class="toggle-pw-btn" onclick="togglePw('confirm_password', 'eye3')">
+                            <i class="bi bi-eye" id="eye3"></i>
+                        </span>
+                    </div>
+                    <div id="pwMatchMsg" class="form-text mt-1"></div>
+                </div>
+                <button type="submit" class="btn btn-sm btn-outline-warning px-4">
+                    <i class="bi bi-shield-lock me-1"></i>Ganti Password
+                </button>
+            </form>
+        </div>
+
+        <!-- Ganti Email Admin -->
+        <div class="dash-card p-4 mb-4">
+            <h6 class="text-white fw-semibold mb-4">
+                <i class="bi bi-envelope me-2" style="color:#818cf8;"></i>
+                Ganti Email Admin
+            </h6>
+            <form action="{{ url_for('dashboard_settings') }}" method="POST">
+                <input type="hidden" name="action" value="change_email">
+                <div class="mb-3">
+                    <label class="form-label text-muted small">Email Saat Ini</label>
+                    <div class="form-control dash-input-readonly">
+                        <i class="bi bi-envelope me-2 text-muted"></i>
+                        {{ settings.admin_email or '(belum diatur)' }}
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="new_email" class="form-label text-white fw-medium">Email Baru</label>
+                    <input type="email" class="form-control dash-input" id="new_email"
+                           name="new_email" placeholder="contoh@email.com" required>
+                </div>
+                <button type="submit" class="btn btn-sm btn-outline-primary px-4">
+                    <i class="bi bi-check-lg me-1"></i>Simpan Email
+                </button>
+            </form>
+        </div>
+
+    </div>
+
+    <!-- ── Kolom Kanan: Pengaturan Pembaca ── -->
+    <div class="col-lg-5">
+
+        <!-- Info Akun Admin -->
+        <div class="dash-card p-4 mb-4">
+            <h6 class="text-white fw-semibold mb-3">
+                <i class="bi bi-info-circle me-2 text-muted"></i>Info Akun Admin
+            </h6>
+            <div class="d-flex flex-column gap-2">
+                <div class="info-row">
+                    <span class="text-muted small">Username</span>
+                    <span class="text-white fw-medium">{{ settings.admin_username }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="text-muted small">Email</span>
+                    <span class="text-white">{{ settings.admin_email or '—' }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="text-muted small">Role</span>
+                    <span class="badge" style="background:rgba(99,102,241,.2);color:#a5b4fc;">Administrator</span>
+                </div>
+                <div class="info-row">
+                    <span class="text-muted small">Terakhir diperbarui</span>
+                    <span class="text-white small">
+                        {{ settings.updated_at.strftime('%d %b %Y, %H:%M') if settings.updated_at else '—' }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pengaturan Pembaca -->
+        <div class="dash-card p-4">
+            <h6 class="text-white fw-semibold mb-1">
+                <i class="bi bi-people me-2" style="color:#818cf8;"></i>
+                Akses Pembaca (Visitor)
+            </h6>
+            <p class="text-muted small mb-4">
+                Pembaca dapat melihat portfolio tapi tidak bisa mengakses dashboard admin.
+            </p>
+
+            <form action="{{ url_for('dashboard_settings') }}" method="POST">
+                <input type="hidden" name="action" value="reader_settings">
+
+                <!-- Toggle Aktif/Nonaktif -->
+                <div class="d-flex align-items-center justify-content-between mb-4 p-3 rounded-3"
+                     style="background:#0f1117;border:1px solid rgba(255,255,255,.08);">
+                    <div>
+                        <div class="text-white fw-medium small">Status Akses Pembaca</div>
+                        <div class="text-muted" style="font-size:.78rem;">
+                            Saat ini:
+                            {% if settings.reader_enabled %}
+                                <span class="text-success">Aktif</span>
+                            {% else %}
+                                <span class="text-danger">Nonaktif</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="form-check form-switch mb-0">
+                        <input class="form-check-input" type="checkbox" role="switch"
+                               id="readerToggle" name="reader_enabled"
+                               style="width:42px;height:22px;cursor:pointer;"
+                               {{ 'checked' if settings.reader_enabled }}>
+                    </div>
+                </div>
+
+                <!-- Password Baru Pembaca -->
+                <div class="mb-3">
+                    <label for="new_reader_password" class="form-label text-white fw-medium">
+                        Password Pembaca Baru
+                    </label>
+                    <div class="position-relative">
+                        <input type="password" class="form-control dash-input" id="new_reader_password"
+                               name="new_reader_password" placeholder="Kosongkan jika tidak ingin ganti"
+                               minlength="4">
+                        <span class="toggle-pw-btn" onclick="togglePw('new_reader_password', 'eyeR')">
+                            <i class="bi bi-eye" id="eyeR"></i>
+                        </span>
+                    </div>
+                    <div class="form-text text-muted" style="font-size:.78rem;">
+                        Minimal 4 karakter. Kosongkan jika tidak ingin mengubah password.
+                    </div>
+                </div>
+
+                <!-- Info cara login pembaca -->
+                <div class="alert-reader mb-4">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <strong>Cara login sebagai Pembaca:</strong><br>
+                    Di halaman login, pilih tab <strong>Pembaca</strong> lalu masukkan password pembaca.
+                </div>
+
+                <button type="submit" class="btn btn-sm w-100" style="background:#6366f1;color:#fff;">
+                    <i class="bi bi-save me-1"></i>Simpan Pengaturan Pembaca
+                </button>
+            </form>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dash-input { background:#0f1117; border:1px solid rgba(255,255,255,.1); color:#e2e8f0; border-radius:10px; padding:.65rem 1rem; }
+    .dash-input:focus { background:#0f1117; border-color:#6366f1; color:#e2e8f0; box-shadow:0 0 0 3px rgba(99,102,241,.15); }
+    .dash-input::placeholder { color:rgba(255,255,255,.2); }
+    .dash-input-readonly { background:#0a0d13; border:1px solid rgba(255,255,255,.06); color:#64748b; border-radius:10px; padding:.65rem 1rem; font-size:.875rem; }
+    .toggle-pw-btn { position:absolute; right:12px; top:50%; transform:translateY(-50%); cursor:pointer; color:rgba(255,255,255,.3); z-index:5; transition:color .2s; }
+    .toggle-pw-btn:hover { color:#6366f1; }
+    .info-row { display:flex; justify-content:space-between; align-items:center; padding:.5rem 0; border-bottom:1px solid rgba(255,255,255,.06); }
+    .info-row:last-child { border-bottom:none; }
+    .alert-reader { background:rgba(99,102,241,.1); border:1px solid rgba(99,102,241,.25); border-radius:10px; padding:.75rem 1rem; font-size:.8rem; color:#a5b4fc; }
+    .form-check-input:checked { background-color:#6366f1; border-color:#6366f1; }
+    .form-check-input { background-color:rgba(255,255,255,.1); border-color:rgba(255,255,255,.2); }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function togglePw(inputId, iconId) {
+    const input = document.getElementById(inputId);
+    const icon = document.getElementById(iconId);
+    if (input.type === 'password') {
+        input.type = 'text'; icon.className = 'bi bi-eye-slash';
+    } else {
+        input.type = 'password'; icon.className = 'bi bi-eye';
+    }
+}
+
+// Validasi konfirmasi password real-time
+const newPw = document.getElementById('new_password');
+const confirmPw = document.getElementById('confirm_password');
+const matchMsg = document.getElementById('pwMatchMsg');
+if (newPw && confirmPw) {
+    function checkMatch() {
+        if (!confirmPw.value) { matchMsg.innerHTML = ''; return; }
+        if (newPw.value === confirmPw.value) {
+            matchMsg.innerHTML = '<span style="color:#4ade80;"><i class="bi bi-check-circle me-1"></i>Password cocok</span>';
+        } else {
+            matchMsg.innerHTML = '<span style="color:#f87171;"><i class="bi bi-x-circle me-1"></i>Password tidak cocok</span>';
+        }
+    }
+    newPw.addEventListener('input', checkMatch);
+    confirmPw.addEventListener('input', checkMatch);
+}
+
+// Cegah submit jika password tidak cocok
+document.getElementById('changePasswordForm')?.addEventListener('submit', function(e) {
+    const np = document.getElementById('new_password').value;
+    const cp = document.getElementById('confirm_password').value;
+    if (np !== cp) { e.preventDefault(); alert('Password baru dan konfirmasi tidak cocok!'); }
+});
+</script>
+{% endblock %}

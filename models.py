@@ -1,5 +1,6 @@
 from datetime import datetime
 from flask_sqlalchemy import SQLAlchemy
+from werkzeug.security import generate_password_hash, check_password_hash
 
 db = SQLAlchemy()
 
@@ -11,14 +12,13 @@ class Project(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(150), nullable=False)
     description = db.Column(db.Text, nullable=False)
-    technologies = db.Column(db.String(300))  # Disimpan sebagai string, dipisah koma
+    technologies = db.Column(db.String(300))
     image_file = db.Column(db.String(120), default='default.jpg')
     github_link = db.Column(db.String(200))
     live_link = db.Column(db.String(200))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def get_technologies_list(self):
-        """Mengembalikan daftar teknologi sebagai list."""
         if self.technologies:
             return [t.strip() for t in self.technologies.split(',')]
         return []
@@ -67,8 +67,46 @@ class Skill(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
-    category = db.Column(db.String(50), default='Technical')  # Technical, Soft Skill, dll.
-    level = db.Column(db.Integer, default=80)  # Level keahlian 0-100
+    category = db.Column(db.String(50), default='Technical')
+    level = db.Column(db.Integer, default=80)
 
     def __repr__(self):
         return f'<Skill {self.name}>'
+
+
+class Settings(db.Model):
+    """Model untuk menyimpan pengaturan akun admin dan akses pembaca."""
+    __tablename__ = 'settings'
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    # Kredensial Admin
+    admin_username = db.Column(db.String(50), nullable=False, default='admin')
+    admin_password_hash = db.Column(db.String(256), nullable=False)
+    admin_email = db.Column(db.String(120), default='')
+
+    # Akses Pembaca (Visitor)
+    reader_enabled = db.Column(db.Boolean, default=True)
+    reader_password_hash = db.Column(db.String(256), nullable=False)
+
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow,
+                           onupdate=datetime.utcnow)
+
+    def set_admin_password(self, password):
+        """Hash dan simpan password admin."""
+        self.admin_password_hash = generate_password_hash(password)
+
+    def check_admin_password(self, password):
+        """Verifikasi password admin."""
+        return check_password_hash(self.admin_password_hash, password)
+
+    def set_reader_password(self, password):
+        """Hash dan simpan password pembaca."""
+        self.reader_password_hash = generate_password_hash(password)
+
+    def check_reader_password(self, password):
+        """Verifikasi password pembaca."""
+        return check_password_hash(self.reader_password_hash, password)
+
+    def __repr__(self):
+        return f'<Settings admin={self.admin_username}>'

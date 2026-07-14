@@ -60,12 +60,13 @@
 
                 <!-- ── Login / User Dropdown ── -->
                 {% if session.get('logged_in') %}
+                {% if session.get('role') == 'admin' %}
+                <!-- ★ ADMIN: dropdown penuh ★ -->
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle d-flex align-items-center gap-2 py-1 px-2 rounded-3"
                        href="#" id="userDropdown" role="button"
                        data-bs-toggle="dropdown" aria-expanded="false"
                        style="background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);">
-                        <!-- Avatar lingkaran dengan inisial -->
                         <span class="rounded-circle d-flex align-items-center justify-content-center fw-bold"
                               style="width:28px;height:28px;background:#6366f1;font-size:.75rem;color:#fff;flex-shrink:0;">
                             {{ session.get('username', 'A')[0]|upper }}
@@ -75,8 +76,7 @@
                         </span>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end shadow-lg"
-                        style="background:#1e2536;border:1px solid rgba(255,255,255,.1);border-radius:12px;min-width:200px;padding:.5rem;">
-                        <!-- Info user -->
+                        style="background:#1e2536;border:1px solid rgba(255,255,255,.1);border-radius:12px;min-width:210px;padding:.5rem;">
                         <li class="px-3 py-2 border-bottom border-secondary border-opacity-25 mb-1">
                             <div class="d-flex align-items-center gap-2">
                                 <span class="rounded-circle d-flex align-items-center justify-content-center fw-bold"
@@ -84,57 +84,69 @@
                                     {{ session.get('username', 'A')[0]|upper }}
                                 </span>
                                 <div>
-                                    <div class="text-white fw-semibold" style="font-size:.875rem;">
-                                        {{ session.get('username', 'Admin') }}
-                                    </div>
-                                    <div class="text-muted" style="font-size:.75rem;">Administrator</div>
+                                    <div class="text-white fw-semibold" style="font-size:.875rem;">{{ session.get('username', 'Admin') }}</div>
+                                    <div class="text-muted" style="font-size:.72rem;">Administrator</div>
                                 </div>
                             </div>
                         </li>
-                        <!-- Menu Dashboard -->
                         <li>
                             <a class="dropdown-item rounded-2 py-2 px-3 d-flex align-items-center gap-2"
-                               href="{{ url_for('dashboard_index') }}"
-                               style="color:#cbd5e1;font-size:.875rem;">
-                                <i class="bi bi-speedometer2" style="color:#818cf8;"></i>
-                                Dashboard Admin
+                               href="{{ url_for('dashboard_index') }}" style="color:#cbd5e1;font-size:.875rem;">
+                                <i class="bi bi-speedometer2" style="color:#818cf8;"></i>Dashboard Admin
                             </a>
                         </li>
                         <li>
                             <a class="dropdown-item rounded-2 py-2 px-3 d-flex align-items-center gap-2"
-                               href="{{ url_for('dashboard_profile') }}"
-                               style="color:#cbd5e1;font-size:.875rem;">
-                                <i class="bi bi-person-gear" style="color:#818cf8;"></i>
-                                Edit Profil
+                               href="{{ url_for('dashboard_profile') }}" style="color:#cbd5e1;font-size:.875rem;">
+                                <i class="bi bi-person-gear" style="color:#818cf8;"></i>Edit Profil
                             </a>
                         </li>
                         <li>
                             <a class="dropdown-item rounded-2 py-2 px-3 d-flex align-items-center gap-2"
-                               href="{{ url_for('dashboard_messages') }}"
-                               style="color:#cbd5e1;font-size:.875rem;">
-                                <i class="bi bi-envelope" style="color:#818cf8;"></i>
-                                Pesan Masuk
+                               href="{{ url_for('dashboard_settings') }}" style="color:#cbd5e1;font-size:.875rem;">
+                                <i class="bi bi-gear" style="color:#818cf8;"></i>Pengaturan
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item rounded-2 py-2 px-3 d-flex align-items-center gap-2"
+                               href="{{ url_for('dashboard_messages') }}" style="color:#cbd5e1;font-size:.875rem;">
+                                <i class="bi bi-envelope" style="color:#818cf8;"></i>Pesan Masuk
                                 {% if unread_count > 0 %}
-                                <span class="badge rounded-pill ms-auto" style="background:#ef4444;font-size:.7rem;">
-                                    {{ unread_count }}
-                                </span>
+                                <span class="badge rounded-pill ms-auto" style="background:#ef4444;font-size:.7rem;">{{ unread_count }}</span>
                                 {% endif %}
                             </a>
                         </li>
                         <li><hr class="dropdown-divider border-secondary border-opacity-25 my-1"></li>
-                        <!-- Logout -->
                         <li>
                             <a class="dropdown-item rounded-2 py-2 px-3 d-flex align-items-center gap-2"
-                               href="{{ url_for('logout') }}"
-                               style="color:#f87171;font-size:.875rem;">
-                                <i class="bi bi-box-arrow-right"></i>
-                                Logout
+                               href="{{ url_for('logout') }}" style="color:#f87171;font-size:.875rem;">
+                                <i class="bi bi-box-arrow-right"></i>Logout
                             </a>
                         </li>
                     </ul>
                 </li>
                 {% else %}
-                <!-- Belum login: tampilkan tombol Login -->
+                <!-- ★ PEMBACA: badge + logout saja ★ -->
+                <li class="nav-item d-flex align-items-center gap-2">
+                    <span class="d-flex align-items-center gap-2 py-1 px-3 rounded-3"
+                          style="background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.25);">
+                        <span class="rounded-circle d-flex align-items-center justify-content-center"
+                              style="width:24px;height:24px;background:#16a34a;font-size:.7rem;color:#fff;font-weight:700;flex-shrink:0;">
+                            P
+                        </span>
+                        <span style="color:#86efac;font-size:.82rem;font-weight:500;">Pembaca</span>
+                    </span>
+                    <a href="{{ url_for('logout') }}"
+                       class="nav-link py-1 px-2 rounded-2 d-flex align-items-center gap-1"
+                       style="color:#f87171;font-size:.82rem;border:1px solid rgba(239,68,68,.25);background:rgba(239,68,68,.08);"
+                       title="Logout">
+                        <i class="bi bi-box-arrow-right"></i>
+                        <span class="d-none d-sm-inline">Logout</span>
+                    </a>
+                </li>
+                {% endif %}
+                {% else %}
+                <!-- Belum login: tombol Login -->
                 <li class="nav-item">
                     <a class="nav-link d-flex align-items-center gap-2 py-1 px-3 rounded-3"
                        href="{{ url_for('login') }}"
