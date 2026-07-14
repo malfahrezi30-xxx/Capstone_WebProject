@@ -31,7 +31,7 @@
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto gap-1">
+            <ul class="navbar-nav ms-auto gap-1 align-items-center">
                 <li class="nav-item">
                     <a class="nav-link {{ 'active' if request.endpoint == 'index' }}" href="{{ url_for('index') }}">
                         <i class="bi bi-house-door me-1"></i>Beranda
@@ -52,10 +52,103 @@
                         <i class="bi bi-envelope me-1"></i>Kontak
                     </a>
                 </li>
+
+                <!-- ── Divider ── -->
+                <li class="nav-item d-none d-lg-block">
+                    <span style="width:1px;height:22px;background:rgba(255,255,255,.15);display:block;margin:0 6px;"></span>
+                </li>
+
+                <!-- ── Login / User Dropdown ── -->
+                {% if session.get('logged_in') %}
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle d-flex align-items-center gap-2 py-1 px-2 rounded-3"
+                       href="#" id="userDropdown" role="button"
+                       data-bs-toggle="dropdown" aria-expanded="false"
+                       style="background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);">
+                        <!-- Avatar lingkaran dengan inisial -->
+                        <span class="rounded-circle d-flex align-items-center justify-content-center fw-bold"
+                              style="width:28px;height:28px;background:#6366f1;font-size:.75rem;color:#fff;flex-shrink:0;">
+                            {{ session.get('username', 'A')[0]|upper }}
+                        </span>
+                        <span class="d-none d-sm-inline" style="color:#a5b4fc;font-size:.875rem;font-weight:500;">
+                            {{ session.get('username', 'Admin') }}
+                        </span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-lg"
+                        style="background:#1e2536;border:1px solid rgba(255,255,255,.1);border-radius:12px;min-width:200px;padding:.5rem;">
+                        <!-- Info user -->
+                        <li class="px-3 py-2 border-bottom border-secondary border-opacity-25 mb-1">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="rounded-circle d-flex align-items-center justify-content-center fw-bold"
+                                      style="width:36px;height:36px;background:#6366f1;font-size:.9rem;color:#fff;flex-shrink:0;">
+                                    {{ session.get('username', 'A')[0]|upper }}
+                                </span>
+                                <div>
+                                    <div class="text-white fw-semibold" style="font-size:.875rem;">
+                                        {{ session.get('username', 'Admin') }}
+                                    </div>
+                                    <div class="text-muted" style="font-size:.75rem;">Administrator</div>
+                                </div>
+                            </div>
+                        </li>
+                        <!-- Menu Dashboard -->
+                        <li>
+                            <a class="dropdown-item rounded-2 py-2 px-3 d-flex align-items-center gap-2"
+                               href="{{ url_for('dashboard_index') }}"
+                               style="color:#cbd5e1;font-size:.875rem;">
+                                <i class="bi bi-speedometer2" style="color:#818cf8;"></i>
+                                Dashboard Admin
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item rounded-2 py-2 px-3 d-flex align-items-center gap-2"
+                               href="{{ url_for('dashboard_profile') }}"
+                               style="color:#cbd5e1;font-size:.875rem;">
+                                <i class="bi bi-person-gear" style="color:#818cf8;"></i>
+                                Edit Profil
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item rounded-2 py-2 px-3 d-flex align-items-center gap-2"
+                               href="{{ url_for('dashboard_messages') }}"
+                               style="color:#cbd5e1;font-size:.875rem;">
+                                <i class="bi bi-envelope" style="color:#818cf8;"></i>
+                                Pesan Masuk
+                                {% if unread_count > 0 %}
+                                <span class="badge rounded-pill ms-auto" style="background:#ef4444;font-size:.7rem;">
+                                    {{ unread_count }}
+                                </span>
+                                {% endif %}
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider border-secondary border-opacity-25 my-1"></li>
+                        <!-- Logout -->
+                        <li>
+                            <a class="dropdown-item rounded-2 py-2 px-3 d-flex align-items-center gap-2"
+                               href="{{ url_for('logout') }}"
+                               style="color:#f87171;font-size:.875rem;">
+                                <i class="bi bi-box-arrow-right"></i>
+                                Logout
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                {% else %}
+                <!-- Belum login: tampilkan tombol Login -->
+                <li class="nav-item">
+                    <a class="nav-link d-flex align-items-center gap-2 py-1 px-3 rounded-3"
+                       href="{{ url_for('login') }}"
+                       style="background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);color:#a5b4fc;font-weight:500;">
+                        <i class="bi bi-box-arrow-in-right"></i>
+                        <span style="font-size:.875rem;">Login</span>
+                    </a>
+                </li>
+                {% endif %}
             </ul>
         </div>
     </div>
 </nav>
+
 
 <!-- FLASH MESSAGES -->
 {% with messages = get_flashed_messages(with_categories=true) %}

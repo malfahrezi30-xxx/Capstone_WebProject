@@ -1,6 +1,8 @@
 import os
+# pyrefly: ignore [missing-import]
 from flask import (Flask, render_template, request, redirect,
                    url_for, session, flash, abort)
+# pyrefly: ignore [missing-import]
 from werkzeug.utils import secure_filename
 from config import Config
 from models import db, Project, Message, Profile, Skill
@@ -70,7 +72,9 @@ def inject_globals():
 
 @app.route('/')
 def index():
-    """Halaman Beranda."""
+    """Halaman Beranda — wajib login terlebih dahulu."""
+    if 'logged_in' not in session:
+        return redirect(url_for('login'))
     profile = Profile.query.first()
     projects = Project.query.order_by(Project.created_at.desc()).limit(3).all()
     skills = Skill.query.all()
@@ -81,9 +85,10 @@ def index():
 @app.route('/about')
 def about():
     """Halaman About."""
+    if 'logged_in' not in session:
+        return redirect(url_for('login'))
     profile = Profile.query.first()
     skills = Skill.query.all()
-    # Kelompokkan skill berdasarkan kategori
     skills_by_category = {}
     for skill in skills:
         cat = skill.category or 'Technical'
@@ -97,6 +102,8 @@ def about():
 @app.route('/portfolio')
 def portfolio():
     """Halaman daftar semua proyek portofolio."""
+    if 'logged_in' not in session:
+        return redirect(url_for('login'))
     projects = Project.query.order_by(Project.created_at.desc()).all()
     return render_template('portfolio.html', projects=projects)
 
@@ -104,6 +111,8 @@ def portfolio():
 @app.route('/portfolio/<int:project_id>')
 def project_detail(project_id):
     """Halaman detail sebuah proyek."""
+    if 'logged_in' not in session:
+        return redirect(url_for('login'))
     project = Project.query.get_or_404(project_id)
     other_projects = Project.query.filter(
         Project.id != project_id
@@ -115,6 +124,8 @@ def project_detail(project_id):
 @app.route('/contact', methods=['GET', 'POST'])
 def contact():
     """Halaman kontak dengan form pengiriman pesan."""
+    if 'logged_in' not in session:
+        return redirect(url_for('login'))
     profile = Profile.query.first()
     if request.method == 'POST':
         name = request.form.get('name', '').strip()
@@ -139,9 +150,9 @@ def contact():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    """Halaman login dashboard admin."""
+    """Halaman login — entry point utama aplikasi."""
     if 'logged_in' in session:
-        return redirect(url_for('dashboard_index'))
+        return redirect(url_for('index'))
 
     if request.method == 'POST':
         username = request.form.get('username', '').strip()
@@ -151,8 +162,8 @@ def login():
                 password == app.config['ADMIN_PASSWORD']):
             session['logged_in'] = True
             session['username'] = username
-            flash('Login berhasil! Selamat datang di Dashboard.', 'success')
-            return redirect(url_for('dashboard_index'))
+            flash('Login berhasil! Selamat datang, ' + username + '.', 'success')
+            return redirect(url_for('index'))
         else:
             flash('Username atau password salah!', 'danger')
 
@@ -161,9 +172,10 @@ def login():
 
 @app.route('/logout')
 def logout():
-    """Logout dari session."""
+    """Logout dari session dan kembali ke halaman login."""
+    username = session.get('username', 'Admin')
     session.clear()
-    flash('Anda telah logout.', 'info')
+    flash(f'Sampai jumpa, {username}! Anda telah logout.', 'info')
     return redirect(url_for('login'))
 
 

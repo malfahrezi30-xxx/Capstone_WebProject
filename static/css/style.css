@@ -517,3 +517,25 @@ body {
     .project-detail-img { height: 250px; }
     .project-detail-img-placeholder { height: 250px; }
 }
+
+/* ============================================
+   NAVBAR USER DROPDOWN
+   ============================================ */
+.dropdown-item {
+    transition: background .15s, color .15s;
+}
+.dropdown-item:hover {
+    background: rgba(99,102,241,.15) !important;
+    color: #a5b4fc !important;
+}
+.dropdown-item:hover i {
+    color: #6366f1 !important;
+}
+.dropdown-menu {
+    animation: dropdownFadeIn .15s ease;
+}
+@keyframes dropdownFadeIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
