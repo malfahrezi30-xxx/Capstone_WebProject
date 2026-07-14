@@ -18,7 +18,7 @@ def init_database():
     with app.app_context():
         # Buat semua tabel
         db.create_all()
-        print("✅ Tabel database berhasil dibuat.")
+        print("[OK] Tabel database berhasil dibuat.")
 
         # ─── Profil ───────────────────────────────────────────────
         if not Profile.query.first():
@@ -43,7 +43,7 @@ def init_database():
                 linkedin='https://linkedin.com/in/'
             )
             db.session.add(profile)
-            print("✅ Profil default berhasil dibuat.")
+            print("[OK] Profil default berhasil dibuat.")
 
         # ─── Skills ───────────────────────────────────────────────
         if not Skill.query.first():
@@ -67,7 +67,7 @@ def init_database():
             ]
             for s in skills_data:
                 db.session.add(Skill(**s))
-            print(f"✅ {len(skills_data)} skill berhasil ditambahkan.")
+            print(f"[OK] {len(skills_data)} skill berhasil ditambahkan.")
 
         # ─── Proyek Demo ──────────────────────────────────────────
         if not Project.query.first():
@@ -111,7 +111,7 @@ def init_database():
             ]
             for p in projects_data:
                 db.session.add(Project(**p))
-            print(f"✅ {len(projects_data)} proyek demo berhasil ditambahkan.")
+            print(f"[OK] {len(projects_data)} proyek demo berhasil ditambahkan.")
 
         # ─── Pesan Demo ───────────────────────────────────────────
         if not Message.query.first():
@@ -131,10 +131,10 @@ def init_database():
             ]
             for m in messages_data:
                 db.session.add(Message(**m))
-            print(f"✅ {len(messages_data)} pesan demo berhasil ditambahkan.")
+            print(f"[OK] {len(messages_data)} pesan demo berhasil ditambahkan.")
 
         db.session.commit()
-        print("\n🚀 Database berhasil diinisialisasi!")
+        print("\n[DONE] Database berhasil diinisialisasi!")
         print("   Username : admin")
         print("   Password : admin123")
         print("   URL      : http://127.0.0.1:5000")
