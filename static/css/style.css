@@ -41,6 +41,9 @@ body {
 /* ── Utility ── */
 .text-accent { color: var(--accent) !important; }
 .bg-section-alt { background: var(--bg-card); }
+.text-muted { color: var(--text-muted) !important; }
+.form-label { color: var(--text-primary) !important; }
+.form-text { color: var(--text-muted) !important; }
 
 /* ============================================
    NAVBAR
