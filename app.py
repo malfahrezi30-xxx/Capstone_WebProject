@@ -2,10 +2,9 @@ import os
 import time
 from functools import wraps
 # pyrefly: ignore [missing-import]
-from flask import (Flask, render_template, request, redirect,
-                   url_for, session, flash, abort)
+from flask import Flask, render_template, request, redirect, url_for, session, flash, abort  # type: ignore[import]
 # pyrefly: ignore [missing-import]
-from werkzeug.utils import secure_filename
+from werkzeug.utils import secure_filename  # type: ignore[import]
 from config import Config
 from models import db, Project, Message, Profile, Skill, Settings
 
