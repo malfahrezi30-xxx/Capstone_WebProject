@@ -18,7 +18,7 @@
                 <div class="mb-4 text-center">
                     <div class="profile-photo-wrapper mx-auto mb-3">
                         {% if profile.photo and profile.photo != 'default_profile.jpg' %}
-                        <img src="{{ url_for('static', filename='uploads/' + profile.photo) }}"
+                        <img src="{{ get_upload_url(profile.photo) }}"
                              alt="{{ profile.name }}" id="photoPreview"
                              style="width:100px;height:100px;border-radius:50%;object-fit:cover;border:3px solid #6366f1;">
                         {% else %}

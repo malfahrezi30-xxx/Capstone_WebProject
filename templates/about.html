@@ -25,7 +25,7 @@
             <div class="col-lg-4 text-center" data-aos="fade-right">
                 <div class="about-img-wrapper mx-auto">
                     {% if profile and profile.photo and profile.photo != 'default_profile.jpg' %}
-                        <img src="{{ url_for('static', filename='uploads/' + profile.photo) }}"
+                        <img src="{{ get_upload_url(profile.photo) }}"
                              alt="{{ profile.name }}" class="about-img">
                     {% else %}
                         <div class="about-img-placeholder">

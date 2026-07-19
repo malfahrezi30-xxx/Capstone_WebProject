@@ -26,7 +26,7 @@
             <div class="col-lg-7" data-aos="fade-right">
                 <div class="project-detail-img-wrapper">
                     {% if project.image_file and project.image_file != 'default.jpg' %}
-                        <img src="{{ url_for('static', filename='uploads/' + project.image_file) }}"
+                        <img src="{{ get_upload_url(project.image_file) }}"
                              alt="{{ project.title }}" class="project-detail-img">
                     {% else %}
                         <div class="project-detail-img-placeholder">
@@ -115,7 +115,7 @@
                 <div class="project-card h-100">
                     <div class="project-card-img-wrapper">
                         {% if other.image_file and other.image_file != 'default.jpg' %}
-                            <img src="{{ url_for('static', filename='uploads/' + other.image_file) }}"
+                            <img src="{{ get_upload_url(other.image_file) }}"
                                  alt="{{ other.title }}" class="project-card-img">
                         {% else %}
                             <div class="project-card-img-placeholder">

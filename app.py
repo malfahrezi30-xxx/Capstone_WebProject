@@ -1,6 +1,7 @@
 import os
 import time
 from functools import wraps
+import requests
 # pyrefly: ignore [missing-import]
 from flask import Flask, render_template, request, redirect, url_for, session, flash, abort  # type: ignore[import]
 # pyrefly: ignore [missing-import]
@@ -63,17 +64,48 @@ def admin_required(f):
 
 
 def save_uploaded_file(file, old_filename=None):
-    """Menyimpan file upload dan mengembalikan nama file baru."""
+    """Menyimpan file upload (ke Supabase jika terkonfigurasi, fallback ke lokal jika tidak)."""
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
         name, ext = os.path.splitext(filename)
         filename = f"{name}_{int(time.time())}{ext}"
+        
+        # Cek konfigurasi Supabase
+        supabase_url = app.config.get('SUPABASE_URL')
+        supabase_key = app.config.get('SUPABASE_KEY')
+        supabase_bucket = app.config.get('SUPABASE_BUCKET', 'portfolio')
+        
+        if supabase_url and supabase_key:
+            supabase_url = supabase_url.rstrip('/')
+            upload_url = f"{supabase_url}/storage/v1/object/{supabase_bucket}/{filename}"
+            headers = {
+                "Authorization": f"Bearer {supabase_key}",
+                "Content-Type": file.content_type
+            }
+            try:
+                file.seek(0)
+                file_data = file.read()
+                response = requests.post(upload_url, headers=headers, data=file_data, timeout=15)
+                if response.status_code == 200:
+                    # Kembalikan URL publik Supabase langsung
+                    public_url = f"{supabase_url}/storage/v1/object/public/{supabase_bucket}/{filename}"
+                    return public_url
+                else:
+                    app.logger.error(f"Supabase upload failed: {response.status_code} - {response.text}")
+            except Exception as e:
+                app.logger.error(f"Supabase upload exception: {e}")
+        
+        # Fallback ke penyimpanan lokal
         upload_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+        file.seek(0)
         file.save(upload_path)
+        
         if old_filename and old_filename not in ('default.jpg', 'default_profile.jpg'):
-            old_path = os.path.join(app.config['UPLOAD_FOLDER'], old_filename)
-            if os.path.exists(old_path):
-                os.remove(old_path)
+            if not old_filename.startswith('http'):
+                old_path = os.path.join(app.config['UPLOAD_FOLDER'], old_filename)
+                if os.path.exists(old_path):
+                    os.remove(old_path)
         return filename
     return None
 
@@ -88,8 +120,16 @@ def inject_globals():
     unread_count = Message.query.filter_by(is_read=False).count()
     is_admin = session.get('role') == 'admin'
     user_role = session.get('role', None)
+    
+    def get_upload_url(filename):
+        if not filename:
+            return ""
+        if filename.startswith('http://') or filename.startswith('https://'):
+            return filename
+        return url_for('static', filename='uploads/' + filename)
+        
     return dict(profile=profile, unread_count=unread_count,
-                is_admin=is_admin, user_role=user_role)
+                is_admin=is_admin, user_role=user_role, get_upload_url=get_upload_url)
 
 
 # ─────────────────────────────────────────────
@@ -502,21 +542,30 @@ def file_too_large(e):
 
 
 # ─────────────────────────────────────────────
-# ENTRY POINT
+# DATABASE INITIALIZATION
 # ─────────────────────────────────────────────
 
-if __name__ == '__main__':
-    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-    with app.app_context():
+with app.app_context():
+    try:
         db.create_all()
         # Init profil default
         if not Profile.query.first():
             db.session.add(Profile(
                 name='Muhammad Sadam Al-Fahrezi',
-                headline='Mahasiswa Teknik Informatika | Python Developer',
-                about='Halo! Saya mahasiswa yang antusias dalam dunia pemrograman.',
-                about_detail='Saya memiliki minat dalam pengembangan web menggunakan Python dan Flask.',
-                education='S1 Teknik Informatika',
+                headline='Mahasiswa Teknik Informatika | Python & Web Developer',
+                about='Halo! Saya mahasiswa yang antusias dalam dunia pemrograman web dan pengembangan aplikasi menggunakan Python.',
+                about_detail=(
+                    'Saya adalah mahasiswa Teknik Informatika yang memiliki passion dalam '
+                    'pengembangan web menggunakan Python dan Flask. Saya senang membangun '
+                    'aplikasi yang fungsional, bersih, dan mudah digunakan. '
+                    'Selain coding, saya juga tertarik dengan desain UI/UX dan pengembangan database. '
+                    'Saya percaya bahwa teknologi dapat membantu memecahkan masalah nyata di masyarakat.'
+                ),
+                education=(
+                    'S1 Teknik Informatika\n'
+                    'Universitas — 2023 s/d sekarang\n'
+                    'Fokus: Pengembangan Web, Algoritma, dan Basis Data'
+                ),
                 email='m.alfahrezi30@gmail.com',
                 github='https://github.com/malfahrezi30-xxx',
                 linkedin='https://linkedin.com/in/'
@@ -524,4 +573,16 @@ if __name__ == '__main__':
         # Init settings default
         get_settings()
         db.session.commit()
+    except Exception as e:
+        app.logger.error(f"Error during database initialization: {e}")
+
+
+# ─────────────────────────────────────────────
+# ENTRY POINT
+# ─────────────────────────────────────────────
+
+if __name__ == '__main__':
+    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
     app.run(debug=True)
+
+

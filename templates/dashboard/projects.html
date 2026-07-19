@@ -30,7 +30,7 @@
                     <td>
                         <div class="rounded-2 overflow-hidden" style="width:50px;height:40px;background:#0f1117;">
                             {% if project.image_file and project.image_file != 'default.jpg' %}
-                            <img src="{{ url_for('static', filename='uploads/' + project.image_file) }}"
+                            <img src="{{ get_upload_url(project.image_file) }}"
                                  style="width:100%;height:100%;object-fit:cover;" alt="">
                             {% else %}
                             <div class="d-flex align-items-center justify-content-center h-100">

@@ -41,7 +41,7 @@
                     {% if project.image_file and project.image_file != 'default.jpg' %}
                     <div class="mb-3">
                         <small class="text-muted d-block mb-2">Gambar saat ini:</small>
-                        <img src="{{ url_for('static', filename='uploads/' + project.image_file) }}"
+                        <img src="{{ get_upload_url(project.image_file) }}"
                              alt="{{ project.title }}" id="currentImg"
                              style="max-height:150px;border-radius:8px;object-fit:cover;">
                     </div>
