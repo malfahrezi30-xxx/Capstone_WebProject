@@ -150,7 +150,16 @@
 
             <div class="reader-badge mb-4">
                 <i class="bi bi-info-circle me-2"></i>
-                <strong>Mode Pembaca</strong> — Anda dapat melihat semua konten portfolio namun tidak dapat mengedit apapun.
+                <strong>Mode Pembaca</strong> — Masukkan username pemilik portofolio dan password pembaca yang diberikan.
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Username Pemilik Portofolio</label>
+                <div class="input-icon">
+                    <i class="bi bi-person icon-left"></i>
+                    <input type="text" class="form-control" name="username"
+                           placeholder="Masukkan username portofolio" autocomplete="username">
+                </div>
             </div>
 
             <div class="mb-4">
@@ -164,7 +173,7 @@
                     </span>
                 </div>
                 <div class="form-text text-muted mt-1" style="font-size:.78rem;">
-                    Hubungi pemilik website untuk mendapatkan password pembaca.
+                    Hubungi pemilik portofolio untuk mendapatkan username dan password pembaca.
                 </div>
             </div>
             <button type="submit" class="btn-reader">
@@ -177,8 +186,16 @@
             <small class="text-muted" style="font-size:.75rem;">
                 <i class="bi bi-info-circle me-1"></i>
                 Demo Admin: <code>admin</code> / <code>admin123</code> &nbsp;|&nbsp;
-                Demo Pembaca: <code>visitor123</code>
+                Demo Pembaca: username <code>admin</code> / pw <code>visitor123</code>
             </small>
+        </div>
+
+        <!-- Link Registrasi -->
+        <div class="text-center mt-3" style="border-top: 1px solid rgba(255,255,255,.07); padding-top: 1rem;">
+            <span class="text-muted" style="font-size:.85rem;">Belum punya akun? </span>
+            <a href="{{ url_for('register') }}" class="text-decoration-none" style="color: #818cf8; font-weight: 600; font-size:.85rem;">
+                Daftar di sini
+            </a>
         </div>
     </div>
 </div>

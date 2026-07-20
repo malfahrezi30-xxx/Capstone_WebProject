@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="id" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daftar Akun Baru</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0f1117;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-image: radial-gradient(ellipse at 20% 50%, rgba(99,102,241,.12) 0%, transparent 55%),
+                              radial-gradient(ellipse at 80% 20%, rgba(139,92,246,.08) 0%, transparent 50%);
+        }
+        .register-wrapper { width: 100%; max-width: 480px; padding: 1rem; }
+        .register-card {
+            background: #161b27;
+            border: 1px solid rgba(255,255,255,.08);
+            border-radius: 20px;
+            padding: 2.25rem;
+            box-shadow: 0 20px 60px rgba(0,0,0,.5);
+        }
+        .register-logo { font-size: 1.75rem; font-weight: 800; color: #fff; }
+
+        /* Input */
+        .form-control {
+            background: #0f1117; border: 1px solid rgba(255,255,255,.1);
+            color: #e2e8f0; border-radius: 10px; padding: .7rem 1rem;
+            font-size: .9rem;
+        }
+        .form-control:focus {
+            background: #0f1117; border-color: #6366f1; color: #e2e8f0;
+            box-shadow: 0 0 0 3px rgba(99,102,241,.15);
+        }
+        .form-control::placeholder { color: rgba(255,255,255,.2); }
+        .form-label { color: rgba(255,255,255,.7); font-size: .875rem; font-weight: 500; margin-bottom: .4rem; }
+        .input-icon { position: relative; }
+        .input-icon i.icon-left { position: absolute; left: .9rem; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,.25); z-index: 5; }
+        .input-icon .form-control { padding-left: 2.5rem; }
+        .toggle-pw { position: absolute; right: .9rem; top: 50%; transform: translateY(-50%); cursor: pointer; color: rgba(255,255,255,.25); z-index: 5; }
+        .toggle-pw:hover { color: #6366f1; }
+
+        /* Buttons */
+        .btn-register { background: linear-gradient(135deg,#6366f1,#8b5cf6); border: none; border-radius: 10px; padding: .7rem; font-weight: 600; color: #fff; width: 100%; transition: all .3s; }
+        .btn-register:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(99,102,241,.4); color: #fff; }
+
+        /* Flash */
+        .alert { border-radius: 10px; border: none; font-size: .875rem; }
+        .alert-success { background: rgba(34,197,94,.15); color: #4ade80; }
+        .alert-danger  { background: rgba(239,68,68,.15); color: #f87171; }
+        .alert-warning { background: rgba(234,179,8,.15); color: #fde047; }
+    </style>
+</head>
+<body>
+<div class="register-wrapper">
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="mb-3">
+        {% for cat, msg in messages %}
+        <div class="alert alert-{{ cat }} alert-dismissible fade show">
+            {% if cat == 'success' %}<i class="bi bi-check-circle-fill me-2"></i>
+            {% else %}<i class="bi bi-x-circle-fill me-2"></i>{% endif %}
+            {{ msg }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <div class="register-card">
+        <!-- Logo -->
+        <div class="text-center mb-4">
+            <div class="register-logo mb-1">Daftar Akun</div>
+            <p class="text-muted mb-0" style="font-size:.875rem;">Buat portofolio dinamis Anda sendiri</p>
+        </div>
+
+        <form action="{{ url_for('register') }}" method="POST">
+            <!-- Username -->
+            <div class="mb-3">
+                <label class="form-label">Username Admin</label>
+                <div class="input-icon">
+                    <i class="bi bi-person icon-left"></i>
+                    <input type="text" class="form-control" name="username"
+                           placeholder="Masukkan username (min. 3 karakter)" required autocomplete="username">
+                </div>
+            </div>
+
+            <!-- Email -->
+            <div class="mb-3">
+                <label class="form-label">Email (Opsional)</label>
+                <div class="input-icon">
+                    <i class="bi bi-envelope icon-left"></i>
+                    <input type="email" class="form-control" name="email"
+                           placeholder="Masukkan email Anda" autocomplete="email">
+                </div>
+            </div>
+
+            <!-- Password Admin -->
+            <div class="mb-3">
+                <label class="form-label">Password Admin</label>
+                <div class="input-icon position-relative">
+                    <i class="bi bi-lock icon-left"></i>
+                    <input type="password" class="form-control" name="password" id="adminPw"
+                           placeholder="Masukkan password admin (min. 6 karakter)" required autocomplete="new-password">
+                    <span class="toggle-pw" onclick="togglePw('adminPw','eyeAdmin')">
+                        <i class="bi bi-eye" id="eyeAdmin"></i>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Password Pembaca -->
+            <div class="mb-4">
+                <label class="form-label">Password Pembaca (Visitor Password)</label>
+                <div class="input-icon position-relative">
+                    <i class="bi bi-key icon-left"></i>
+                    <input type="password" class="form-control" name="reader_password" id="readerPw"
+                           placeholder="Password untuk pembaca melihat portofolio Anda" required autocomplete="new-password">
+                    <span class="toggle-pw" onclick="togglePw('readerPw','eyeReader')">
+                        <i class="bi bi-eye" id="eyeReader"></i>
+                    </span>
+                </div>
+                <div class="form-text text-muted mt-1" style="font-size:.78rem;">
+                    Password ini digunakan orang lain untuk melihat portofolio Anda (tab Pembaca di halaman login).
+                </div>
+            </div>
+
+            <button type="submit" class="btn-register mb-3">
+                <i class="bi bi-person-plus me-2"></i>Daftar Sekarang
+            </button>
+
+            <div class="text-center">
+                <span class="text-muted" style="font-size:.85rem;">Sudah punya akun? </span>
+                <a href="{{ url_for('login') }}" class="text-decoration-none" style="color: #818cf8; font-weight: 500; font-size:.85rem;">Login di sini</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function togglePw(inputId, iconId) {
+    const input = document.getElementById(inputId);
+    const icon  = document.getElementById(iconId);
+    if (input.type === 'password') {
+        input.type = 'text'; icon.className = 'bi bi-eye-slash';
+    } else {
+        input.type = 'password'; icon.className = 'bi bi-eye';
+    }
+}
+</script>
+</body>
+</html>

@@ -8,7 +8,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from app import app, db
-from models import Project, Message, Profile, Skill, Settings
+from models import Project, Message, Profile, Skill, User
 
 
 def init_database():
@@ -18,9 +18,23 @@ def init_database():
         db.create_all()
         print("[OK] Tabel database berhasil dibuat.")
 
+        # ─── User (Kredensial Admin & Pembaca) ────────────
+        admin = User.query.filter_by(username='admin').first()
+        if not admin:
+            admin = User()
+            admin.username = 'admin'
+            admin.set_password('admin123')
+            admin.email = 'm.alfahrezi30@gmail.com'
+            admin.reader_enabled = True
+            admin.set_reader_password('visitor123')
+            db.session.add(admin)
+            db.session.commit()
+            print("[OK] User default 'admin' berhasil dibuat.")
+
         # ─── Profil ───────────────────────────────────────────────
-        if not Profile.query.first():
+        if not Profile.query.filter_by(user_id=admin.id).first():
             profile = Profile(
+                user_id=admin.id,
                 name='Muhammad Sadam Al-Fahrezi',
                 headline='Mahasiswa Teknik Informatika | Python & Web Developer',
                 about='Halo! Saya mahasiswa yang antusias dalam dunia pemrograman web dan pengembangan aplikasi menggunakan Python.',
@@ -44,7 +58,7 @@ def init_database():
             print("[OK] Profil default berhasil dibuat.")
 
         # ─── Skills ───────────────────────────────────────────────
-        if not Skill.query.first():
+        if not Skill.query.filter_by(user_id=admin.id).first():
             skills_data = [
                 # Technical
                 {'name': 'Python',       'category': 'Technical',  'level': 85},
@@ -64,11 +78,11 @@ def init_database():
                 {'name': 'Teamwork',     'category': 'Soft Skill', 'level': 88},
             ]
             for s in skills_data:
-                db.session.add(Skill(**s))
+                db.session.add(Skill(user_id=admin.id, **s))
             print(f"[OK] {len(skills_data)} skill berhasil ditambahkan.")
 
         # ─── Proyek Demo ──────────────────────────────────────────
-        if not Project.query.first():
+        if not Project.query.filter_by(user_id=admin.id).first():
             projects_data = [
                 {
                     'title': 'Web Portfolio Dinamis dengan Flask',
@@ -108,11 +122,11 @@ def init_database():
                 },
             ]
             for p in projects_data:
-                db.session.add(Project(**p))
+                db.session.add(Project(user_id=admin.id, **p))
             print(f"[OK] {len(projects_data)} proyek demo berhasil ditambahkan.")
 
         # ─── Pesan Demo ───────────────────────────────────────────
-        if not Message.query.first():
+        if not Message.query.filter_by(user_id=admin.id).first():
             messages_data = [
                 {
                     'name': 'Pak Bayu',
@@ -128,19 +142,8 @@ def init_database():
                 },
             ]
             for m in messages_data:
-                db.session.add(Message(**m))
+                db.session.add(Message(user_id=admin.id, **m))
             print(f"[OK] {len(messages_data)} pesan demo berhasil ditambahkan.")
-
-        # ─── Settings (Kredensial Admin & Pembaca) ────────────
-        if not Settings.query.first():
-            s = Settings()
-            s.admin_username = 'admin'
-            s.set_admin_password('admin123')
-            s.admin_email = 'm.alfahrezi30@gmail.com'
-            s.reader_enabled = True
-            s.set_reader_password('visitor123')
-            db.session.add(s)
-            print("[OK] Settings default berhasil dibuat.")
 
         db.session.commit()
         print("\n[DONE] Database berhasil diinisialisasi!")

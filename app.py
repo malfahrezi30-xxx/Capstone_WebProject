@@ -4,10 +4,9 @@ from functools import wraps
 import requests
 # pyrefly: ignore [missing-import]
 from flask import Flask, render_template, request, redirect, url_for, session, flash, abort  # type: ignore[import]
-# pyrefly: ignore [missing-import]
 from werkzeug.utils import secure_filename  # type: ignore[import]
 from config import Config
-from models import db, Project, Message, Profile, Skill, Settings
+from models import db, Project, Message, Profile, Skill, User
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -26,16 +25,27 @@ def allowed_file(filename):
 
 
 def get_settings():
-    """Ambil settings dari DB, buat default jika belum ada."""
-    s = Settings.query.first()
-    if not s:
-        s = Settings()
-        s.set_admin_password(app.config.get('ADMIN_PASSWORD', 'admin123'))
-        s.admin_username = app.config.get('ADMIN_USERNAME', 'admin')
-        s.set_reader_password('visitor123')
-        db.session.add(s)
+    """Ambil settings dari DB, buat default jika belum ada (Backward compatibility helper)."""
+    user_id = session.get('user_id')
+    if user_id:
+        return User.query.get(user_id)
+    u = User.query.first()
+    if not u:
+        u = User(username=app.config.get('ADMIN_USERNAME', 'admin'))
+        u.set_password(app.config.get('ADMIN_PASSWORD', 'admin123'))
+        u.set_reader_password('visitor123')
+        db.session.add(u)
         db.session.commit()
-    return s
+    return u
+
+
+def get_current_portfolio_user_id():
+    """Mendapatkan ID user portofolio yang sedang aktif diakses."""
+    if session.get('role') == 'admin':
+        return session.get('user_id')
+    elif session.get('role') == 'reader':
+        return session.get('portfolio_user_id')
+    return None
 
 
 def login_required(f):
@@ -116,8 +126,9 @@ def save_uploaded_file(file, old_filename=None):
 
 @app.context_processor
 def inject_globals():
-    profile = Profile.query.first()
-    unread_count = Message.query.filter_by(is_read=False).count()
+    user_id = get_current_portfolio_user_id()
+    profile = Profile.query.filter_by(user_id=user_id).first() if user_id else None
+    unread_count = Message.query.filter_by(user_id=user_id, is_read=False).count() if user_id else 0
     is_admin = session.get('role') == 'admin'
     user_role = session.get('role', None)
     
@@ -141,9 +152,12 @@ def index():
     """Beranda — wajib login (admin atau pembaca)."""
     if 'logged_in' not in session:
         return redirect(url_for('login'))
-    profile = Profile.query.first()
-    projects = Project.query.order_by(Project.created_at.desc()).limit(3).all()
-    skills = Skill.query.all()
+    user_id = get_current_portfolio_user_id()
+    if not user_id:
+        return redirect(url_for('login'))
+    profile = Profile.query.filter_by(user_id=user_id).first()
+    projects = Project.query.filter_by(user_id=user_id).order_by(Project.created_at.desc()).limit(3).all()
+    skills = Skill.query.filter_by(user_id=user_id).all()
     return render_template('index.html', profile=profile,
                            projects=projects, skills=skills)
 
@@ -152,8 +166,9 @@ def index():
 @login_required
 def about():
     """Halaman About."""
-    profile = Profile.query.first()
-    skills = Skill.query.all()
+    user_id = get_current_portfolio_user_id()
+    profile = Profile.query.filter_by(user_id=user_id).first()
+    skills = Skill.query.filter_by(user_id=user_id).all()
     skills_by_category = {}
     for skill in skills:
         cat = skill.category or 'Technical'
@@ -168,7 +183,8 @@ def about():
 @login_required
 def portfolio():
     """Halaman daftar semua proyek portofolio."""
-    projects = Project.query.order_by(Project.created_at.desc()).all()
+    user_id = get_current_portfolio_user_id()
+    projects = Project.query.filter_by(user_id=user_id).order_by(Project.created_at.desc()).all()
     return render_template('portfolio.html', projects=projects)
 
 
@@ -176,9 +192,11 @@ def portfolio():
 @login_required
 def project_detail(project_id):
     """Halaman detail sebuah proyek."""
-    project = Project.query.get_or_404(project_id)
+    user_id = get_current_portfolio_user_id()
+    project = Project.query.filter_by(id=project_id, user_id=user_id).first_or_404()
     other_projects = Project.query.filter(
-        Project.id != project_id
+        Project.id != project_id,
+        Project.user_id == user_id
     ).order_by(Project.created_at.desc()).limit(3).all()
     return render_template('project_detail.html',
                            project=project, other_projects=other_projects)
@@ -188,7 +206,8 @@ def project_detail(project_id):
 @login_required
 def contact():
     """Halaman kontak."""
-    profile = Profile.query.first()
+    user_id = get_current_portfolio_user_id()
+    profile = Profile.query.filter_by(user_id=user_id).first()
     if request.method == 'POST':
         name = request.form.get('name', '').strip()
         email = request.form.get('email', '').strip()
@@ -196,7 +215,7 @@ def contact():
         if not name or not email or not message_text:
             flash('Semua field wajib diisi!', 'danger')
         else:
-            msg = Message(name=name, email=email, message=message_text)
+            msg = Message(user_id=user_id, name=name, email=email, message=message_text)
             db.session.add(msg)
             db.session.commit()
             flash('Pesan berhasil dikirim! Terima kasih.', 'success')
@@ -217,14 +236,14 @@ def login():
     if request.method == 'POST':
         login_type = request.form.get('login_type', 'admin')
         password = request.form.get('password', '').strip()
-        settings = get_settings()
 
         if login_type == 'admin':
             username = request.form.get('username', '').strip()
-            if (username == settings.admin_username and
-                    settings.check_admin_password(password)):
+            user = User.query.filter_by(username=username).first()
+            if user and user.check_password(password):
                 session['logged_in'] = True
                 session['username'] = username
+                session['user_id'] = user.id
                 session['role'] = 'admin'
                 flash(f'Selamat datang kembali, {username}!', 'success')
                 return redirect(url_for('index'))
@@ -232,18 +251,88 @@ def login():
                 flash('Username atau password admin salah!', 'danger')
 
         elif login_type == 'reader':
-            if not settings.reader_enabled:
-                flash('Akses pembaca sedang dinonaktifkan oleh admin.', 'warning')
-            elif settings.check_reader_password(password):
+            username = request.form.get('username', '').strip()
+            user = User.query.filter_by(username=username).first()
+            if not user:
+                flash('Username portofolio tidak ditemukan!', 'danger')
+            elif not user.reader_enabled:
+                flash('Akses pembaca sedang dinonaktifkan oleh pemilik portofolio.', 'warning')
+            elif user.check_reader_password(password):
                 session['logged_in'] = True
                 session['username'] = 'Pembaca'
+                session['portfolio_user_id'] = user.id
                 session['role'] = 'reader'
-                flash('Selamat datang! Anda masuk sebagai Pembaca.', 'success')
+                flash(f'Selamat datang! Anda masuk sebagai Pembaca portofolio {username}.', 'success')
                 return redirect(url_for('index'))
             else:
                 flash('Password pembaca salah!', 'danger')
 
     return render_template('dashboard/login.html')
+
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    """Halaman registrasi akun baru."""
+    if 'logged_in' in session:
+        return redirect(url_for('index'))
+
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        email = request.form.get('email', '').strip()
+        password = request.form.get('password', '').strip()
+        reader_password = request.form.get('reader_password', '').strip()
+
+        if not username or not password or not reader_password:
+            flash('Username, password admin, dan password pembaca wajib diisi!', 'danger')
+            return render_template('dashboard/register.html')
+
+        if len(username) < 3:
+            flash('Username minimal 3 karakter!', 'danger')
+            return render_template('dashboard/register.html')
+
+        if len(password) < 6:
+            flash('Password admin minimal 6 karakter!', 'danger')
+            return render_template('dashboard/register.html')
+
+        # Cek jika username sudah ada
+        existing_user = User.query.filter_by(username=username).first()
+        if existing_user:
+            flash('Username sudah digunakan oleh orang lain!', 'danger')
+            return render_template('dashboard/register.html')
+
+        # Cek email jika diisi
+        if email:
+            existing_email = User.query.filter_by(email=email).first()
+            if existing_email:
+                flash('Email sudah terdaftar!', 'danger')
+                return render_template('dashboard/register.html')
+
+        # Buat user baru
+        new_user = User(username=username, email=email)
+        new_user.set_password(password)
+        new_user.set_reader_password(reader_password)
+
+        db.session.add(new_user)
+        db.session.commit() # Simpan agar mendapatkan ID user baru
+
+        # Buat profil kosong untuk user baru
+        new_profile = Profile(
+            user_id=new_user.id,
+            name=username,
+            headline='Web Developer',
+            about='Halo! Saya baru saja mendaftar di web portofolio ini.',
+            about_detail='Silakan edit profil lengkap Anda di dashboard admin.',
+            education='Pendidikan belum diisi.',
+            email=email or 'email@example.com',
+            photo='default_profile.jpg'
+        )
+        db.session.add(new_profile)
+        db.session.commit()
+
+        flash('Pendaftaran berhasil! Silakan masuk dengan akun baru Anda.', 'success')
+        return redirect(url_for('login'))
+
+    return render_template('dashboard/register.html')
 
 
 @app.route('/logout')
@@ -266,12 +355,13 @@ def logout():
 @app.route('/dashboard')
 @admin_required
 def dashboard_index():
-    total_projects = Project.query.count()
-    total_messages = Message.query.count()
-    unread_messages = Message.query.filter_by(is_read=False).count()
-    recent_messages = Message.query.order_by(
+    user_id = session.get('user_id')
+    total_projects = Project.query.filter_by(user_id=user_id).count()
+    total_messages = Message.query.filter_by(user_id=user_id).count()
+    unread_messages = Message.query.filter_by(user_id=user_id, is_read=False).count()
+    recent_messages = Message.query.filter_by(user_id=user_id).order_by(
         Message.created_at.desc()).limit(5).all()
-    recent_projects = Project.query.order_by(
+    recent_projects = Project.query.filter_by(user_id=user_id).order_by(
         Project.created_at.desc()).limit(5).all()
     return render_template('dashboard/index.html',
                            total_projects=total_projects,
@@ -288,13 +378,15 @@ def dashboard_index():
 @app.route('/dashboard/projects')
 @admin_required
 def dashboard_projects():
-    projects = Project.query.order_by(Project.created_at.desc()).all()
+    user_id = session.get('user_id')
+    projects = Project.query.filter_by(user_id=user_id).order_by(Project.created_at.desc()).all()
     return render_template('dashboard/projects.html', projects=projects)
 
 
 @app.route('/dashboard/projects/add', methods=['GET', 'POST'])
 @admin_required
 def add_project():
+    user_id = session.get('user_id')
     if request.method == 'POST':
         title = request.form.get('title', '').strip()
         description = request.form.get('description', '').strip()
@@ -314,7 +406,7 @@ def add_project():
                 else:
                     flash('Format file tidak diizinkan!', 'danger')
                     return render_template('dashboard/add_project.html')
-        project = Project(title=title, description=description,
+        project = Project(user_id=user_id, title=title, description=description,
                           technologies=technologies, image_file=image_filename,
                           github_link=github_link, live_link=live_link)
         db.session.add(project)
@@ -327,7 +419,8 @@ def add_project():
 @app.route('/dashboard/projects/edit/<int:project_id>', methods=['GET', 'POST'])
 @admin_required
 def edit_project(project_id):
-    project = Project.query.get_or_404(project_id)
+    user_id = session.get('user_id')
+    project = Project.query.filter_by(id=project_id, user_id=user_id).first_or_404()
     if request.method == 'POST':
         project.title = request.form.get('title', '').strip()
         project.description = request.form.get('description', '').strip()
@@ -355,7 +448,8 @@ def edit_project(project_id):
 @app.route('/dashboard/projects/delete/<int:project_id>', methods=['POST'])
 @admin_required
 def delete_project(project_id):
-    project = Project.query.get_or_404(project_id)
+    user_id = session.get('user_id')
+    project = Project.query.filter_by(id=project_id, user_id=user_id).first_or_404()
     title = project.title
     if project.image_file and project.image_file != 'default.jpg':
         img_path = os.path.join(app.config['UPLOAD_FOLDER'], project.image_file)
@@ -374,8 +468,9 @@ def delete_project(project_id):
 @app.route('/dashboard/profile', methods=['GET', 'POST'])
 @admin_required
 def dashboard_profile():
-    profile = Profile.query.first()
-    skills = Skill.query.all()
+    user_id = session.get('user_id')
+    profile = Profile.query.filter_by(user_id=user_id).first()
+    skills = Skill.query.filter_by(user_id=user_id).all()
     if request.method == 'POST':
         action = request.form.get('action', 'update_profile')
         if action == 'update_profile':
@@ -400,7 +495,7 @@ def dashboard_profile():
             skill_category = request.form.get('skill_category', 'Technical').strip()
             skill_level = int(request.form.get('skill_level', 80))
             if skill_name:
-                db.session.add(Skill(name=skill_name, category=skill_category,
+                db.session.add(Skill(user_id=user_id, name=skill_name, category=skill_category,
                                      level=skill_level))
                 db.session.commit()
                 flash(f'Skill "{skill_name}" berhasil ditambahkan!', 'success')
@@ -413,7 +508,8 @@ def dashboard_profile():
 @app.route('/dashboard/skills/delete/<int:skill_id>', methods=['POST'])
 @admin_required
 def delete_skill(skill_id):
-    skill = Skill.query.get_or_404(skill_id)
+    user_id = session.get('user_id')
+    skill = Skill.query.filter_by(id=skill_id, user_id=user_id).first_or_404()
     name = skill.name
     db.session.delete(skill)
     db.session.commit()
@@ -428,14 +524,16 @@ def delete_skill(skill_id):
 @app.route('/dashboard/messages')
 @admin_required
 def dashboard_messages():
-    messages = Message.query.order_by(Message.created_at.desc()).all()
+    user_id = session.get('user_id')
+    messages = Message.query.filter_by(user_id=user_id).order_by(Message.created_at.desc()).all()
     return render_template('dashboard/messages.html', messages=messages)
 
 
 @app.route('/dashboard/messages/read/<int:msg_id>', methods=['POST'])
 @admin_required
 def mark_message_read(msg_id):
-    msg = Message.query.get_or_404(msg_id)
+    user_id = session.get('user_id')
+    msg = Message.query.filter_by(id=msg_id, user_id=user_id).first_or_404()
     msg.is_read = not msg.is_read
     db.session.commit()
     status = 'dibaca' if msg.is_read else 'belum dibaca'
@@ -446,7 +544,8 @@ def mark_message_read(msg_id):
 @app.route('/dashboard/messages/delete/<int:msg_id>', methods=['POST'])
 @admin_required
 def delete_message(msg_id):
-    msg = Message.query.get_or_404(msg_id)
+    user_id = session.get('user_id')
+    msg = Message.query.filter_by(id=msg_id, user_id=user_id).first_or_404()
     name = msg.name
     db.session.delete(msg)
     db.session.commit()
@@ -548,9 +647,17 @@ def file_too_large(e):
 with app.app_context():
     try:
         db.create_all()
-        # Init profil default
-        if not Profile.query.first():
+        # Init user default
+        if not User.query.first():
+            admin = User(username='admin', email='m.alfahrezi30@gmail.com')
+            admin.set_password('admin123')
+            admin.set_reader_password('visitor123')
+            db.session.add(admin)
+            db.session.commit() # dapatkan admin.id
+            
+            # Init profil untuk admin default
             db.session.add(Profile(
+                user_id=admin.id,
                 name='Muhammad Sadam Al-Fahrezi',
                 headline='Mahasiswa Teknik Informatika | Python & Web Developer',
                 about='Halo! Saya mahasiswa yang antusias dalam dunia pemrograman web dan pengembangan aplikasi menggunakan Python.',
@@ -570,9 +677,7 @@ with app.app_context():
                 github='https://github.com/malfahrezi30-xxx',
                 linkedin='https://linkedin.com/in/'
             ))
-        # Init settings default
-        get_settings()
-        db.session.commit()
+            db.session.commit()
     except Exception as e:
         app.logger.error(f"Error during database initialization: {e}")
 
